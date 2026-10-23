@@ -1,0 +1,11 @@
+<div class="empty">
+  {% if icon %}
+    <div class="empty-icon">
+      <i class="ti {{ icon }}" aria-hidden="true"></i>
+    </div>
+  {% endif %}
+  <p class="empty-title">{{ title }}</p>
+  {% if message %}
+    <p class="empty-subtitle text-secondary">{{ message }}</p>
+  {% endif %}
+</div>

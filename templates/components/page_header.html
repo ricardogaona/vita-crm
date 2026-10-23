@@ -1,0 +1,9 @@
+{% if breadcrumbs %}
+  {% include "components/breadcrumbs.html" %}
+{% endif %}
+{% if page_title %}
+  <h2 class="page-title">{{ page_title }}</h2>
+{% endif %}
+{% if page_description %}
+  <p class="text-secondary m-0">{{ page_description }}</p>
+{% endif %}

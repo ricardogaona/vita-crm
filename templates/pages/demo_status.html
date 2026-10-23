@@ -1,0 +1,7 @@
+<p class="mb-0">
+  {% if checked_at %}
+    Estado generado por el servidor el {{ checked_at|date:"d/m/Y H:i:s" }}.
+  {% else %}
+    Todavía no hay una consulta. El botón pide este fragmento al servidor.
+  {% endif %}
+</p>

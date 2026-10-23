@@ -1,0 +1,40 @@
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="light" aria-label="Navegación principal">
+  <div class="container-fluid">
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#sidebar-menu"
+      aria-controls="sidebar-menu"
+      aria-expanded="false"
+      aria-label="Abrir menú"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <h1 class="navbar-brand mb-0">
+      {% if ui_demo_enabled %}
+        <a href="{% url 'ui:demo' %}">Vita CRM</a>
+      {% else %}
+        Vita CRM
+      {% endif %}
+    </h1>
+    <div class="collapse navbar-collapse" id="sidebar-menu">
+      <ul class="navbar-nav pt-lg-3">
+        {% if ui_demo_enabled %}
+          <li class="nav-item">
+            <a
+              class="nav-link{% if request.resolver_match.url_name == 'demo' or request.resolver_match.url_name == 'status' %} active{% endif %}"
+              href="{% url 'ui:demo' %}"
+              {% if request.resolver_match.url_name == 'demo' or request.resolver_match.url_name == 'status' %}aria-current="page"{% endif %}
+            >
+              <span class="nav-link-icon">
+                <i class="ti ti-layout-dashboard" aria-hidden="true"></i>
+              </span>
+              <span class="nav-link-title">Demostración</span>
+            </a>
+          </li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</aside>

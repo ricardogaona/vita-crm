@@ -1,0 +1,21 @@
+{% load static django_htmx %}<!DOCTYPE html>
+<html lang="es" data-bs-theme="light">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Vita CRM{% endblock %}</title>
+    {% block meta %}{% endblock %}
+    <link rel="stylesheet" href="{% static 'vendor/tabler/css/tabler.min.css' %}">
+    <link rel="stylesheet" href="{% static 'vendor/tabler/icons/tabler-icons.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    {% block extra_css %}{% endblock %}
+  </head>
+  <body hx-headers='{"x-csrftoken": "{{ csrf_token }}"}'>
+    <a class="visually-hidden-focusable" href="#contenido">Saltar al contenido</a>
+    {% block content %}{% endblock %}
+    {% htmx_script %}
+    <script src="{% static 'vendor/tabler/js/tabler.min.js' %}" defer></script>
+    <script src="{% static 'js/app.js' %}" defer></script>
+    {% block extra_js %}{% endblock %}
+  </body>
+</html>

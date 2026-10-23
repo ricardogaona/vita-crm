@@ -1,0 +1,17 @@
+{% if messages %}
+  <div class="mb-3" aria-live="polite">
+    {% for message in messages %}
+      {% if "error" in message.tags %}
+        {% include "components/alert.html" with level="danger" text=message %}
+      {% elif "warning" in message.tags %}
+        {% include "components/alert.html" with level="warning" text=message %}
+      {% elif "success" in message.tags %}
+        {% include "components/alert.html" with level="success" text=message %}
+      {% elif "debug" in message.tags %}
+        {% include "components/alert.html" with level="secondary" text=message %}
+      {% else %}
+        {% include "components/alert.html" with level="info" text=message %}
+      {% endif %}
+    {% endfor %}
+  </div>
+{% endif %}

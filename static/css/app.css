@@ -1,0 +1,19 @@
+/* Vita CRM
+   Prefer Tabler utilities in templates. Add a rule here only when Tabler
+   does not already cover the case. */
+
+.nav-link-icon .ti {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+/* Hide idle HTMX indicators from view and from assistive tech.
+   A request adds .htmx-request to the indicator (see htmx docs). */
+.htmx-indicator {
+  display: none;
+}
+
+.htmx-request .htmx-indicator,
+.htmx-request.htmx-indicator {
+  display: inline;
+}

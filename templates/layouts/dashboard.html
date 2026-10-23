@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="page">
+    {% include "components/sidebar.html" %}
+    <div class="page-wrapper">
+      {% include "components/navbar.html" %}
+      <div class="page-header d-print-none">
+        <div class="container-xl">
+          <div class="row g-2 align-items-center">
+            <div class="col-12 col-md">
+              {% include "components/page_header.html" %}
+            </div>
+            <div class="col-12 col-md-auto ms-md-auto d-print-none">
+              <div class="btn-list">
+                {% block page_actions %}{% endblock %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <main id="contenido" class="page-body">
+        <div class="container-xl">
+          {% include "components/alerts.html" %}
+          {% block dashboard_content %}{% endblock %}
+        </div>
+      </main>
+      {% include "components/footer.html" %}
+    </div>
+  </div>
+{% endblock %}

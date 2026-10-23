@@ -1,0 +1,13 @@
+@tabler/core 1.6.1
+  css/tabler.min.css
+  js/tabler.min.js
+  https://www.npmjs.com/package/@tabler/core
+
+@tabler/icons-webfont 3.49.0
+  icons/tabler-icons.min.css
+  icons/fonts/tabler-icons.woff2
+  https://www.npmjs.com/package/@tabler/icons-webfont
+
+The icon stylesheet also names woff and ttf files. Current browsers request
+the woff2 source first, so those extra font files are not vendored.
+Source maps referenced by the minified Tabler files are not vendored either.
