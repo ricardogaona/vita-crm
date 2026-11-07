@@ -1,0 +1,151 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block title %}{{ professional }} · Vita CRM{% endblock %}
+
+{% block page_actions %}
+  <a class="btn btn-primary" href="{% url 'profesionales:editar' professional.pk %}">Editar</a>
+  {% if professional.has_service_history %}
+    {% if professional.is_active %}
+      <form method="post" action="{% url 'profesionales:desactivar' professional.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-warning">Desactivar</button>
+      </form>
+    {% endif %}
+  {% else %}
+    <form method="post" action="{% url 'profesionales:eliminar' professional.pk %}">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">Eliminar</button>
+    </form>
+  {% endif %}
+{% endblock %}
+
+{% block dashboard_content %}
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Ficha</h3>
+          <div class="card-actions">
+            {% if professional.is_active %}
+              <span class="badge bg-success-lt">Activa</span>
+            {% else %}
+              <span class="badge bg-secondary-lt">Inactiva</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="datagrid">
+            <div class="datagrid-item">
+              <div class="datagrid-title">Nombre</div>
+              <div class="datagrid-content">{{ professional.first_name }}</div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Apellido</div>
+              <div class="datagrid-content">{{ professional.last_name }}</div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Documento</div>
+              <div class="datagrid-content">{{ professional.identification_number }}</div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Teléfono</div>
+              <div class="datagrid-content">{{ professional.phone }}</div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Correo</div>
+              <div class="datagrid-content">{{ professional.email }}</div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Incorporación</div>
+              <div class="datagrid-content">
+                {% if professional.start_date %}
+                  {{ professional.start_date|date:"j/n/Y" }}
+                {% else %}
+                  —
+                {% endif %}
+              </div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Finalización</div>
+              <div class="datagrid-content">
+                {% if professional.end_date %}
+                  {{ professional.end_date|date:"j/n/Y" }}
+                {% else %}
+                  —
+                {% endif %}
+              </div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Notas</div>
+              <div class="datagrid-content">
+                {% if professional.notes %}
+                  {{ professional.notes|linebreaksbr }}
+                {% else %}
+                  —
+                {% endif %}
+              </div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Creada</div>
+              <div class="datagrid-content">{{ professional.created_at|date:"j/n/Y H:i" }}</div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Actualizada</div>
+              <div class="datagrid-content">{{ professional.updated_at|date:"j/n/Y H:i" }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mt-3">
+        <div class="card-header">
+          <h3 class="card-title">Servicios realizados</h3>
+        </div>
+        {% if service_history is None %}
+          <div class="card-body">
+            <p class="text-secondary mb-0">
+              El historial aparecerá cuando exista el módulo de servicios realizados.
+            </p>
+          </div>
+        {% elif service_history %}
+          <div class="table-responsive">
+            <table class="table table-vcenter card-table">
+              <thead>
+                <tr>
+                  <th scope="col">Fecha</th>
+                  <th scope="col">Reserva</th>
+                  <th scope="col">Clienta</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in service_history %}
+                  <tr>
+                    <td>
+                      {% if row.performed_on %}
+                        {{ row.performed_on|date:"j/n/Y" }}
+                      {% else %}
+                        —
+                      {% endif %}
+                    </td>
+                    <td>{{ row.reservation|default:"—" }}</td>
+                    <td>
+                      {% if row.client %}
+                        <a href="{% url 'clientes:detalle' row.client.pk %}">{{ row.client }}</a>
+                      {% else %}
+                        —
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="card-body">
+            {% include "components/empty_state.html" with title="Sin servicios" message="Esta profesional todavía no tiene servicios realizados." icon="ti-calendar" %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

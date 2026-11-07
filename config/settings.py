@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django_htmx",
     "clients",
+    "professionals",
     "ui",
 ]
 

@@ -1,0 +1,94 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block title %}Profesionales · Vita CRM{% endblock %}
+
+{% block page_actions %}
+  <a class="btn btn-primary" href="{% url 'profesionales:nueva' %}">
+    <i class="ti ti-plus" aria-hidden="true"></i>
+    Nueva profesional
+  </a>
+{% endblock %}
+
+{% block dashboard_content %}
+  <div class="card">
+    <div class="card-header">
+      <form method="get" action="{% url 'profesionales:lista' %}" role="search">
+        <div class="row g-2">
+          <div class="col-md">
+            <input
+              type="search"
+              name="q"
+              value="{{ query }}"
+              class="form-control"
+              placeholder="Nombre, apellido, documento, teléfono o correo"
+              aria-label="Buscar profesionales"
+            >
+          </div>
+          <div class="col-md-3">
+            <select name="estado" class="form-select" aria-label="Estado">
+              <option value="" {% if not estado %}selected{% endif %}>Todas</option>
+              <option value="activas" {% if estado == "activas" %}selected{% endif %}>Activas</option>
+              <option value="inactivas" {% if estado == "inactivas" %}selected{% endif %}>Inactivas</option>
+            </select>
+          </div>
+          <div class="col-md-auto">
+            <button class="btn btn-primary" type="submit">Buscar</button>
+          </div>
+        </div>
+      </form>
+    </div>
+    {% if page_obj.object_list %}
+      <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+          <thead>
+            <tr>
+              <th scope="col">Nombre</th>
+              <th scope="col">Documento</th>
+              <th scope="col">Teléfono</th>
+              <th scope="col">Correo</th>
+              <th scope="col">Estado</th>
+              <th scope="col">Incorporación</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for professional in page_obj %}
+              <tr>
+                <td>
+                  <a href="{% url 'profesionales:detalle' professional.pk %}">{{ professional }}</a>
+                </td>
+                <td>{{ professional.identification_number }}</td>
+                <td>{{ professional.phone }}</td>
+                <td>{{ professional.email }}</td>
+                <td>
+                  {% if professional.is_active %}
+                    <span class="badge bg-success-lt">Activa</span>
+                  {% else %}
+                    <span class="badge bg-secondary-lt">Inactiva</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if professional.start_date %}
+                    {{ professional.start_date|date:"j/n/Y" }}
+                  {% else %}
+                    —
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="card-footer d-flex justify-content-center">
+        {% include "components/pagination.html" %}
+      </div>
+    {% else %}
+      <div class="card-body">
+        {% if query or estado %}
+          {% include "components/empty_state.html" with title="Sin resultados" message="No hay profesionales que coincidan con la búsqueda." icon="ti-search" %}
+        {% else %}
+          {% include "components/empty_state.html" with title="Sin profesionales" message="Todavía no hay profesionales cargadas." icon="ti-users" %}
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}
