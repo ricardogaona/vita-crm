@@ -1,7 +1,7 @@
 from django import forms
 
 
-class TablerForm(forms.Form):
+class TablerFormMixin:
     """Aplica las clases y atributos de Tabler a los widgets del formulario."""
 
     def __init__(self, *args, **kwargs):
@@ -36,6 +36,14 @@ class TablerForm(forms.Form):
         if getattr(widget, "input_type", "") in {"checkbox", "radio"}:
             return "form-check-input"
         return "form-control"
+
+
+class TablerForm(TablerFormMixin, forms.Form):
+    """Formulario suelto con el marcado de Tabler."""
+
+
+class TablerModelForm(TablerFormMixin, forms.ModelForm):
+    """Formulario de modelo con el marcado de Tabler."""
 
 
 class DemoForm(TablerForm):

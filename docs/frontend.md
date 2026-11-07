@@ -113,7 +113,7 @@ Paginación, cuando exista un `page_obj` de Django:
 {% include "components/pagination.html" %}
 ```
 
-El partial arma links `?page=`. No conserva otros parámetros de la consulta.
+El partial arma los links con `{% querystring %}`, así que conserva el resto de la consulta (por ejemplo `q`). Si el template se renderiza sin `request`, los links quedan en `?page=`.
 
 Iconos: clase `ti` más el nombre, por ejemplo `<i class="ti ti-user" aria-hidden="true"></i>`. Si el icono es el único contenido de un botón, el botón necesita un nombre accesible.
 

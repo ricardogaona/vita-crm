@@ -1,0 +1,120 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block title %}{{ client }} · Vita CRM{% endblock %}
+
+{% block page_actions %}
+  <a class="btn btn-primary" href="{% url 'clientes:editar' client.pk %}">Editar</a>
+  <form method="post" action="{% url 'clientes:eliminar' client.pk %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Eliminar</button>
+  </form>
+{% endblock %}
+
+{% block dashboard_content %}
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Ficha</h3>
+          <div class="card-actions">
+            {% if client.is_active %}
+              <span class="badge bg-success-lt">Activa</span>
+            {% else %}
+              <span class="badge bg-secondary-lt">Inactiva</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="datagrid">
+            <div class="datagrid-item">
+              <div class="datagrid-title">Nombre</div>
+              <div class="datagrid-content">{{ client.first_name }}</div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Apellido</div>
+              <div class="datagrid-content">{{ client.last_name }}</div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Documento</div>
+              <div class="datagrid-content">{{ client.identification_number|default:"—" }}</div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">RUC</div>
+              <div class="datagrid-content">{{ client.tax_id|default:"—" }}</div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Razón social</div>
+              <div class="datagrid-content">{{ client.tax_name|default:"—" }}</div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Teléfono</div>
+              <div class="datagrid-content">{{ client.phone|default:"—" }}</div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Correo</div>
+              <div class="datagrid-content">{{ client.email|default:"—" }}</div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Origen</div>
+              <div class="datagrid-content">{{ client.get_source_display|default:"—" }}</div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Referida por</div>
+              <div class="datagrid-content">
+                {% if client.referred_by %}
+                  <a href="{% url 'clientes:detalle' client.referred_by.pk %}">{{ client.referred_by }}</a>
+                {% else %}
+                  —
+                {% endif %}
+              </div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Primer contacto</div>
+              <div class="datagrid-content">
+                {% if client.first_contact_date %}
+                  {{ client.first_contact_date|date:"j/n/Y" }}
+                {% else %}
+                  —
+                {% endif %}
+              </div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Consentimiento de marketing</div>
+              <div class="datagrid-content">
+                {% if client.marketing_consent %}Sí{% else %}No{% endif %}
+              </div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Fecha del consentimiento</div>
+              <div class="datagrid-content">
+                {% if client.marketing_consent_at %}
+                  {{ client.marketing_consent_at|date:"j/n/Y H:i" }}
+                {% else %}
+                  —
+                {% endif %}
+              </div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Notas</div>
+              <div class="datagrid-content">
+                {% if client.notes %}
+                  {{ client.notes|linebreaksbr }}
+                {% else %}
+                  —
+                {% endif %}
+              </div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Creada</div>
+              <div class="datagrid-content">{{ client.created_at|date:"j/n/Y H:i" }}</div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Actualizada</div>
+              <div class="datagrid-content">{{ client.updated_at|date:"j/n/Y H:i" }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

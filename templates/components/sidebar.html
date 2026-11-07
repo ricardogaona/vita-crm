@@ -34,6 +34,18 @@
             </a>
           </li>
         {% endif %}
+        <li class="nav-item">
+          <a
+            class="nav-link{% if request.resolver_match.namespace == 'clientes' %} active{% endif %}"
+            href="{% url 'clientes:lista' %}"
+            {% if request.resolver_match.namespace == 'clientes' %}aria-current="page"{% endif %}
+          >
+            <span class="nav-link-icon">
+              <i class="ti ti-users" aria-hidden="true"></i>
+            </span>
+            <span class="nav-link-title">Clientas</span>
+          </a>
+        </li>
       </ul>
     </div>
   </div>
