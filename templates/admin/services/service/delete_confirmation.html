@@ -1,0 +1,6 @@
+{% extends "admin/delete_confirmation.html" %}
+
+{% block delete_protected %}
+  <p>{{ deactivate_instead }}</p>
+  {{ block.super }}
+{% endblock %}

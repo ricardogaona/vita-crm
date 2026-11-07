@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     "django_htmx",
     "clients",
     "professionals",
+    "services",
     "ui",
 ]
 
