@@ -44,19 +44,3 @@ class TablerForm(TablerFormMixin, forms.Form):
 
 class TablerModelForm(TablerFormMixin, forms.ModelForm):
     """Formulario de modelo con el marcado de Tabler."""
-
-
-class DemoForm(TablerForm):
-    name = forms.CharField(
-        label="Nombre",
-        min_length=2,
-        max_length=80,
-        help_text="Entre 2 y 80 caracteres.",
-    )
-    message = forms.CharField(
-        label="Mensaje",
-        min_length=10,
-        max_length=280,
-        help_text="Mínimo 10 caracteres. La validación la hace el servidor.",
-        widget=forms.Textarea(attrs={"rows": 4}),
-    )

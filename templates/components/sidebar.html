@@ -12,28 +12,22 @@
       <span class="navbar-toggler-icon"></span>
     </button>
     <h1 class="navbar-brand mb-0">
-      {% if ui_demo_enabled %}
-        <a href="{% url 'ui:demo' %}">Vita CRM</a>
-      {% else %}
-        Vita CRM
-      {% endif %}
+      <a href="{% url 'inicio' %}">Vita CRM</a>
     </h1>
     <div class="collapse navbar-collapse" id="sidebar-menu">
       <ul class="navbar-nav pt-lg-3">
-        {% if ui_demo_enabled %}
-          <li class="nav-item">
-            <a
-              class="nav-link{% if request.resolver_match.url_name == 'demo' or request.resolver_match.url_name == 'status' %} active{% endif %}"
-              href="{% url 'ui:demo' %}"
-              {% if request.resolver_match.url_name == 'demo' or request.resolver_match.url_name == 'status' %}aria-current="page"{% endif %}
-            >
-              <span class="nav-link-icon">
-                <i class="ti ti-layout-dashboard" aria-hidden="true"></i>
-              </span>
-              <span class="nav-link-title">Demostración</span>
-            </a>
-          </li>
-        {% endif %}
+        <li class="nav-item">
+          <a
+            class="nav-link{% if request.resolver_match.url_name == 'inicio' %} active{% endif %}"
+            href="{% url 'inicio' %}"
+            {% if request.resolver_match.url_name == 'inicio' %}aria-current="page"{% endif %}
+          >
+            <span class="nav-link-icon">
+              <i class="ti ti-layout-dashboard" aria-hidden="true"></i>
+            </span>
+            <span class="nav-link-title">Dashboard</span>
+          </a>
+        </li>
         <li class="nav-item">
           <a
             class="nav-link{% if request.resolver_match.namespace == 'clientes' %} active{% endif %}"

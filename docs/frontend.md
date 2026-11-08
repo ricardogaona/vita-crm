@@ -34,10 +34,6 @@ templates/
 │   ├── page_header.html
 │   ├── pagination.html
 │   └── sidebar.html
-└── pages/
-    ├── demo.html
-    ├── demo_form.html
-    └── demo_status.html
 ```
 
 `base.html` define el documento: idioma `es`, viewport, CSS, `{% htmx_script %}`, Tabler y `app.js`. El `body` envía el token CSRF en cada request de HTMX:
@@ -130,10 +126,10 @@ Una view puede devolver la página completa o un fragmento. `django_htmx.middlew
 ```python
 @vary_on_headers("HX-Request")
 @require_http_methods(["GET"])
-def estado(request):
+def detalle(request):
     if request.htmx:
-        return render(request, "pages/demo_status.html", context)
-    return render(request, "pages/demo.html", context)
+        return render(request, "partials/detalle.html", context)
+    return render(request, "detalle.html", context)
 ```
 
 El fragmento no extiende `base.html` y no vuelve a cargar CSS ni HTMX.
@@ -143,12 +139,12 @@ En el template, el pedido y el destino quedan explícitos:
 ```html
 <button
   type="button"
-  hx-get="{% url 'ui:status' %}"
-  hx-target="#status-panel"
+  hx-get="{% url 'app:detalle' %}"
+  hx-target="#panel"
   hx-swap="innerHTML"
-  hx-indicator="#status-indicator"
+  hx-indicator="#panel-indicator"
 >
-  Actualizar estado
+  Actualizar
 </button>
 ```
 
@@ -157,17 +153,17 @@ Un formulario que también funciona sin JavaScript conserva `method`, `action` y
 ```html
 <form
   method="post"
-  action="{% url 'ui:demo' %}"
-  hx-post="{% url 'ui:demo' %}"
-  hx-target="#demo-form-region"
+  action="{% url 'app:guardar' %}"
+  hx-post="{% url 'app:guardar' %}"
+  hx-target="#form-region"
   hx-swap="outerHTML"
-  hx-disabled-elt="#demo-submit"
+  hx-disabled-elt="#submit"
 >
   {% csrf_token %}
 </form>
 ```
 
-El HTML devuelto por HTMX tiene que incluir otra vez `#demo-form-region` cuando el swap es `outerHTML`.
+El HTML devuelto por HTMX tiene que incluir otra vez el elemento apuntado por `hx-target` cuando el swap es `outerHTML`.
 
 Respuestas:
 
@@ -177,7 +173,7 @@ Respuestas:
 
 `hx-disabled-elt` desactiva el botón mientras el request está en curso. El texto "Enviando…" o "Consultando…" está en un elemento `.htmx-indicator`, oculto hasta que HTMX agrega `.htmx-request`.
 
-Las vistas de HTMX usan las mismas restricciones que el resto: CSRF activo, autoescape de templates y el control de acceso que corresponda. Sin sesión, un request HTMX no inserta el login dentro del fragmento: la respuesta trae `HX-Redirect` y el navegador carga la página de login completa. La demostración responde 404 cuando `DEBUG` es falso solo si ya hay sesión, tanto para un GET común como para HTMX.
+Las vistas de HTMX usan las mismas restricciones que el resto: CSRF activo, autoescape de templates y el control de acceso que corresponda. Sin sesión, un request HTMX no inserta el login dentro del fragmento: la respuesta trae `HX-Redirect` y el navegador carga la página de login completa.
 
 ## CSRF
 
@@ -203,13 +199,9 @@ El CSS de iconos también nombra fuentes `woff` y `ttf`. Los navegadores actuale
 
 HTMX se actualiza junto con `django-htmx`. La versión por defecto del template tag es HTMX 2. No pasar `version=4`: esa línea sigue en beta.
 
-## Pantalla de demostración
+## Acceso
 
 Toda vista exige una sesión. Quien no la tiene va al login del admin (`/admin/login/`) y, si entra, vuelve a la URL que había pedido. Ese formulario solo acepta un usuario activo y staff. `/admin/login/` queda público, igual que los archivos bajo `STATIC_URL`, para que la pantalla de login cargue su CSS y su JavaScript.
-
-Con `DJANGO_DEBUG=True`, la ruta `/ui/` muestra el layout, un GET parcial (`/ui/estado/`) y un POST validado por `ui.forms.DemoForm`. No crea modelos ni guarda datos. Con `DEBUG=False` esas rutas responden 404 para un usuario autenticado. Sin sesión, la redirección al login ocurre antes.
-
-El formulario de demostración usa `novalidate` para que los errores que se ven salgan de Django. En un formulario real se puede omitir `novalidate` si se quiere sumar la validación del navegador. La validación del servidor sigue siendo obligatoria.
 
 ## Pruebas
 
@@ -221,4 +213,4 @@ docker compose exec web python manage.py test ui
 docker compose exec web python manage.py collectstatic --noinput
 ```
 
-`ui/tests.py` cubre la página completa, el fragmento GET, el POST válido e inválido, CSRF, el 405 de métodos no permitidos, la redirección al login y el 404 fuera de desarrollo.
+`ui/tests.py` cubre la página del dashboard, los assets locales, la redirección al login y los partials de estado vacío y paginación.

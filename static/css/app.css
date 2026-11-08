@@ -57,3 +57,16 @@
 .picker-clear:hover {
   color: var(--tblr-body-color);
 }
+
+.dashboard-chart {
+  position: relative;
+  height: 16rem;
+}
+
+.dashboard-chart-tall {
+  height: 20rem;
+}
+
+#periodo-fechas[hidden] {
+  display: none !important;
+}

@@ -1,0 +1,198 @@
+{% extends "layouts/dashboard.html" %}
+{% load money static %}
+
+{% block title %}Dashboard · Vita CRM{% endblock %}
+
+{% block page_actions %}
+  <form method="get" action="{% url 'inicio' %}" class="row g-2 align-items-end justify-content-md-end">
+    <div class="col-12 col-sm-auto">
+      <label class="form-label" for="periodo">Período</label>
+      <select class="form-select" id="periodo" name="periodo">
+        {% for value, label in period_choices %}
+          <option value="{{ value }}" {% if periodo == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-12 col-sm-auto" id="periodo-fechas" {% if periodo != "personalizado" %}hidden{% endif %}>
+      <div class="row g-2">
+        <div class="col-6 col-sm-auto">
+          <label class="form-label" for="desde">Desde</label>
+          <input class="form-control" type="date" id="desde" name="desde" value="{{ desde }}">
+        </div>
+        <div class="col-6 col-sm-auto">
+          <label class="form-label" for="hasta">Hasta</label>
+          <input class="form-control" type="date" id="hasta" name="hasta" value="{{ hasta }}">
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-sm-auto">
+      <button class="btn btn-primary" type="submit">Aplicar</button>
+    </div>
+  </form>
+{% endblock %}
+
+{% block dashboard_content %}
+  {% if period_error %}
+    <div class="alert alert-danger" role="alert">{{ period_error }}</div>
+  {% else %}
+    <div class="row row-cards mb-3">
+      <div class="col-6 col-xl-3">
+        <div class="card">
+          <div class="card-body">
+            <div class="subheader">Valor de atenciones</div>
+            <div class="h1 mb-0">{{ kpis.value|guaranies }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-xl-3">
+        <div class="card">
+          <div class="card-body">
+            <div class="subheader">Atenciones realizadas</div>
+            <div class="h1 mb-0">{{ kpis.count }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-xl-3">
+        <div class="card">
+          <div class="card-body">
+            <div class="subheader">Ticket promedio</div>
+            <div class="h1 mb-0">
+              {% if kpis.ticket is None %}—{% else %}{{ kpis.ticket|guaranies }}{% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-xl-3">
+        <div class="card">
+          <div class="card-body">
+            <div class="subheader">Clientas atendidas</div>
+            <div class="h1 mb-0">{{ kpis.clients }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row row-cards">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Evolución del valor de atenciones</h3>
+          </div>
+          <div class="card-body">
+            {% if charts.evolution %}
+              <div class="dashboard-chart dashboard-chart-tall" role="img" aria-label="Evolución del valor de atenciones">
+                <canvas id="chart-evolution"></canvas>
+              </div>
+            {% else %}
+              {% include "components/empty_state.html" with title="Sin datos para el período seleccionado" icon="ti-chart-line" %}
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Servicios más realizados</h3>
+          </div>
+          <div class="card-body">
+            {% if charts.services %}
+              <div class="dashboard-chart" role="img" aria-label="Servicios más realizados">
+                <canvas id="chart-services"></canvas>
+              </div>
+            {% else %}
+              {% include "components/empty_state.html" with title="Sin datos para el período seleccionado" icon="ti-chart-bar" %}
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Atenciones con reserva / sin reserva</h3>
+          </div>
+          <div class="card-body">
+            {% if charts.split %}
+              <div class="dashboard-chart" role="img" aria-label="Atenciones con reserva y sin reserva">
+                <canvas id="chart-split"></canvas>
+              </div>
+            {% else %}
+              {% include "components/empty_state.html" with title="Sin datos para el período seleccionado" icon="ti-chart-pie" %}
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Estados de las reservas</h3>
+          </div>
+          <div class="card-body">
+            {% if charts.statuses %}
+              <div class="dashboard-chart" role="img" aria-label="Estados de las reservas">
+                <canvas id="chart-statuses"></canvas>
+              </div>
+            {% else %}
+              {% include "components/empty_state.html" with title="Sin datos para el período seleccionado" icon="ti-chart-bar" %}
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Últimas atenciones</h3>
+            <div class="card-actions">
+              <a href="{% url 'atenciones:lista' %}">Ver todas</a>
+            </div>
+          </div>
+          {% if recent %}
+            <div class="table-responsive">
+              <table class="table table-vcenter card-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Fecha</th>
+                    <th scope="col">Clienta</th>
+                    <th scope="col" class="d-none d-md-table-cell">Profesional</th>
+                    <th scope="col" class="d-none d-md-table-cell">Servicios</th>
+                    <th scope="col">Total</th>
+                    <th scope="col">Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for attention in recent %}
+                    <tr>
+                      <td>{{ attention.performed_at|date:"j/n/Y H:i" }}</td>
+                      <td>{{ attention.client }}</td>
+                      <td class="d-none d-md-table-cell">{{ attention.professional }}</td>
+                      <td class="d-none d-md-table-cell">{{ attention.service_summary }}</td>
+                      <td>{{ attention.total_price_gs|guaranies }}</td>
+                      <td>
+                        <a href="{% url 'atenciones:detalle' attention.pk %}">Ver detalle</a>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="card-body">
+              {% include "components/empty_state.html" with title="No se registraron atenciones en este período" icon="ti-clipboard-check" %}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+  {% if charts %}
+    {{ charts|json_script:"dashboard-data" }}
+  {% endif %}
+  <script src="{% static 'vendor/chartjs/chart.umd.min.js' %}" defer></script>
+  <script src="{% static 'js/dashboard.js' %}" defer></script>
+{% endblock %}

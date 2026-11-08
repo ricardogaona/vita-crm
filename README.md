@@ -30,8 +30,6 @@ Dentro de la red de Docker, Django se conecta a `db:5432`. El mapeo `5433:5432` 
 
 La interfaz usa Django Templates, Tabler UI y HTMX. La guía de uso está en [docs/frontend.md](docs/frontend.md).
 
-Con `DJANGO_DEBUG=True`, la pantalla de referencia queda en http://localhost:8000/ui/.
-
 ## Comandos útiles
 
 ```bash
