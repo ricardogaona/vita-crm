@@ -121,13 +121,27 @@
                 {% for row in service_history %}
                   <tr>
                     <td>
-                      {% if row.performed_on %}
-                        {{ row.performed_on|date:"j/n/Y" }}
+                      {% if row.attention %}
+                        <a href="{% url 'atenciones:detalle' row.attention.pk %}">
+                          {% if row.performed_on %}
+                            {{ row.performed_on|date:"j/n/Y H:i" }}
+                          {% else %}
+                            Ver atención
+                          {% endif %}
+                        </a>
+                      {% elif row.performed_on %}
+                        {{ row.performed_on|date:"j/n/Y H:i" }}
                       {% else %}
                         —
                       {% endif %}
                     </td>
-                    <td>{{ row.reservation|default:"—" }}</td>
+                    <td>
+                      {% if row.reservation %}
+                        <a href="{% url 'reservas:detalle' row.reservation.pk %}">{{ row.reservation }}</a>
+                      {% else %}
+                        Sin reserva
+                      {% endif %}
+                    </td>
                     <td>
                       {% if row.client %}
                         <a href="{% url 'clientes:detalle' row.client.pk %}">{{ row.client }}</a>

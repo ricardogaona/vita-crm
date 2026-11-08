@@ -73,10 +73,9 @@ class Reservation(models.Model):
         super().save(*args, **kwargs)
 
     def has_performed_services(self):
-        """Servicios realizados. La relación llega con PerformedService."""
+        """True si esta reserva ya originó una atención."""
         if self.pk is None:
             return False
-        performed_services = getattr(self, "performed_services", None)
-        if performed_services is None:
-            return False
-        return performed_services.exists()
+        from performed_services.models import PerformedService
+
+        return PerformedService.objects.filter(reservation_id=self.pk).exists()

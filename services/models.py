@@ -140,13 +140,13 @@ class Service(models.Model):
         super().save(*args, **kwargs)
 
     def has_performed_services(self):
-        """Atenciones registradas. La relación llega con PerformedService."""
+        """True si el servicio quedó en alguna atención."""
         if self.pk is None:
             return False
-        performed_services = getattr(self, "performed_services", None)
-        if performed_services is None:
+        items = getattr(self, "performed_service_items", None)
+        if items is None:
             return False
-        return performed_services.exists()
+        return items.exists()
 
     def _normalize_text(self):
         self.code = (self.code or "").strip().upper()

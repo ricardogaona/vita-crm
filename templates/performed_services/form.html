@@ -1,0 +1,233 @@
+{% extends "layouts/dashboard.html" %}
+{% load money %}
+
+{% block title %}{{ page_title }} · Vita CRM{% endblock %}
+
+{% block page_actions %}
+  <a class="btn" href="{{ cancel_url }}">Volver</a>
+{% endblock %}
+
+{% block dashboard_content %}
+  <div class="row">
+    <div class="col-lg-10">
+      <div class="card">
+        <div class="card-body">
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger" role="alert">
+              {% for error in form.non_field_errors %}
+                <div>{{ error }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+          <form method="post" action="" id="attention-form" novalidate>
+            {% csrf_token %}
+            <h2 class="h3">Reserva o clienta</h2>
+            <div class="mb-3">
+              <label class="form-check form-switch" for="{{ form.has_reservation.id_for_label }}">
+                {{ form.has_reservation }}
+                <span class="form-check-label">¿Tiene reserva?</span>
+              </label>
+            </div>
+            <div id="reservation-mode"{% if not has_reservation %} hidden{% endif %}>
+              {% include "performed_services/partials/reservation_picker.html" %}
+            </div>
+            <div id="client-mode"{% if has_reservation %} hidden{% endif %}>
+              {% include "reservations/partials/client_picker.html" %}
+            </div>
+
+            <h2 class="h3 mt-4">Información de la atención</h2>
+            {% include "components/form_field.html" with field=form.professional %}
+            {% include "components/form_field.html" with field=form.performed_at %}
+            {% include "components/form_field.html" with field=form.notes %}
+
+            <h2 class="h3 mt-4">Servicios realizados</h2>
+            {{ formset.management_form }}
+            {% if formset.non_form_errors %}
+              <div class="alert alert-danger" role="alert">
+                {% for error in formset.non_form_errors %}
+                  <div>{{ error }}</div>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <div class="table-responsive">
+              <table class="table table-vcenter">
+                <thead>
+                  <tr>
+                    <th scope="col">Servicio</th>
+                    <th scope="col">Precio unitario</th>
+                    <th scope="col">Cantidad</th>
+                    <th scope="col">Subtotal</th>
+                    <th scope="col"><span class="visually-hidden">Acciones</span></th>
+                  </tr>
+                </thead>
+                <tbody id="attention-items">
+                  {% for item_form in formset %}
+                    {% include "performed_services/partials/item_row.html" with form=item_form %}
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <button
+              type="button"
+              class="btn"
+              hx-get="{% url 'atenciones:item_fila' %}"
+              hx-target="#attention-items"
+              hx-swap="beforeend"
+              hx-vals="js:{index: document.getElementById('id_items-TOTAL_FORMS').value}"
+            >
+              Agregar servicio
+            </button>
+
+            <h2 class="h3 mt-4">Cargos adicionales y total</h2>
+            {% include "components/form_field.html" with field=form.additional_charge_gs %}
+            {% include "components/form_field.html" with field=form.additional_charge_description %}
+            <div class="datagrid mb-3">
+              <div class="datagrid-item">
+                <div class="datagrid-title">Subtotal de servicios</div>
+                <div class="datagrid-content" id="services-subtotal">{{ services_subtotal|guaranies }}</div>
+              </div>
+              <div class="datagrid-item">
+                <div class="datagrid-title">Total</div>
+                <div class="datagrid-content fw-bold" id="grand-total">{{ grand_total|guaranies }}</div>
+              </div>
+            </div>
+            <p class="form-hint">El total lo calcula el sistema al guardar. Acá es una previsualización.</p>
+            <button type="submit" class="btn btn-primary">Guardar</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% include "reservations/partials/client_modal.html" %}
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    (function () {
+      var form = document.getElementById("attention-form");
+      if (!form) {
+        return;
+      }
+
+      function formatGs(value) {
+        var amount = Math.max(0, parseInt(value, 10) || 0);
+        return "Gs. " + String(amount).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+      }
+
+      function refreshTotals() {
+        var services = 0;
+        form.querySelectorAll("[data-item-row]").forEach(function (row) {
+          if (row.hidden) {
+            return;
+          }
+          var deleter = row.querySelector("input[name$=-DELETE]");
+          if (deleter && deleter.checked) {
+            return;
+          }
+          var priceInput = row.querySelector("[data-unit-price]");
+          var quantityInput = row.querySelector("[data-quantity]");
+          var price = priceInput ? parseInt(priceInput.value, 10) || 0 : 0;
+          var quantity = quantityInput ? parseInt(quantityInput.value, 10) || 0 : 0;
+          var subtotal = price * quantity;
+          var cell = row.querySelector("[data-subtotal]");
+          if (cell) {
+            cell.textContent = formatGs(subtotal);
+          }
+          services += subtotal;
+        });
+        var chargeInput = document.getElementById("id_additional_charge_gs");
+        var charge = chargeInput ? parseInt(chargeInput.value, 10) || 0 : 0;
+        var servicesNode = document.getElementById("services-subtotal");
+        var totalNode = document.getElementById("grand-total");
+        if (servicesNode) {
+          servicesNode.textContent = formatGs(services);
+        }
+        if (totalNode) {
+          totalNode.textContent = formatGs(services + charge);
+        }
+      }
+
+      function clearText(id, message) {
+        var node = document.getElementById(id);
+        if (node) {
+          node.textContent = message;
+        }
+      }
+
+      function clearReservation() {
+        var input = document.getElementById("id_reservation");
+        if (input) {
+          input.value = "";
+        }
+        clearText("attention-reservation-selected", "Ninguna reserva seleccionada.");
+        var results = document.getElementById("reservation-search-results");
+        if (results) {
+          results.innerHTML = "";
+        }
+        var search = document.getElementById("id_reservation_search");
+        if (search) {
+          search.value = "";
+        }
+      }
+
+      function clearClient() {
+        var input = document.getElementById("id_client");
+        if (input) {
+          input.value = "";
+        }
+        clearText("reservation-client-selected", "Ninguna clienta seleccionada.");
+        var results = document.getElementById("client-search-results");
+        if (results) {
+          results.innerHTML = "";
+        }
+        var search = document.getElementById("id_client_search");
+        if (search) {
+          search.value = "";
+        }
+      }
+
+      var switchInput = document.getElementById("id_has_reservation");
+      if (switchInput) {
+        switchInput.addEventListener("change", function () {
+          var enabled = switchInput.checked;
+          var reservationMode = document.getElementById("reservation-mode");
+          var clientMode = document.getElementById("client-mode");
+          if (reservationMode) {
+            reservationMode.hidden = !enabled;
+          }
+          if (clientMode) {
+            clientMode.hidden = enabled;
+          }
+          if (enabled) {
+            clearClient();
+          } else {
+            clearReservation();
+          }
+        });
+      }
+
+      form.addEventListener("click", function (event) {
+        var button = event.target.closest("[data-remove-item]");
+        if (!button || !form.contains(button)) {
+          return;
+        }
+        var row = button.closest("[data-item-row]");
+        if (!row) {
+          return;
+        }
+        var deleter = row.querySelector("input[name$=-DELETE]");
+        if (row.getAttribute("data-existing") === "true" && deleter) {
+          deleter.checked = true;
+          row.hidden = true;
+        } else {
+          row.remove();
+        }
+        refreshTotals();
+      });
+
+      form.addEventListener("input", refreshTotals);
+      document.addEventListener("htmx:afterSwap", refreshTotals);
+      refreshTotals();
+    })();
+  </script>
+{% endblock %}

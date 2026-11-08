@@ -45,11 +45,14 @@ def _parse_date(raw):
         return None, ""
 
 
-def _performed_services(reservation):
-    performed_services = getattr(reservation, "performed_services", None)
-    if performed_services is None:
-        return None
-    return list(performed_services.all())
+def _performed_service(reservation):
+    from performed_services.models import PerformedService
+
+    return (
+        PerformedService.objects.filter(reservation=reservation)
+        .select_related("client")
+        .first()
+    )
 
 
 @require_GET
@@ -127,7 +130,7 @@ def reservation_detail(request, pk):
     context.update(
         {
             "reservation": reservation,
-            "performed_services": _performed_services(reservation),
+            "performed_service": _performed_service(reservation),
         }
     )
     return render(request, "reservations/detail.html", context)

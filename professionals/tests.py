@@ -479,7 +479,7 @@ class ProfessionalViewTests(TestCase):
         self.assertContains(response, "Gomez, Ana")
         self.assertContains(response, "ana@example.com")
         self.assertContains(response, "Creada")
-        self.assertContains(response, "El historial aparecerá cuando exista el módulo")
+        self.assertContains(response, "Esta profesional todavía no tiene servicios realizados.")
         self.assertContains(response, "Eliminar")
         self.assertNotContains(response, "Desactivar")
 

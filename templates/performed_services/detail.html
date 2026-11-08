@@ -1,0 +1,121 @@
+{% extends "layouts/dashboard.html" %}
+{% load money %}
+
+{% block title %}{{ attention }} · Vita CRM{% endblock %}
+
+{% block page_actions %}
+  <a class="btn btn-primary" href="{% url 'atenciones:editar' attention.pk %}">Editar</a>
+  <form
+    method="post"
+    action="{% url 'atenciones:eliminar' attention.pk %}"
+    onsubmit="return confirm('¿Eliminar esta atención? También se eliminan sus servicios. La clienta, la reserva y la profesional se conservan.');"
+  >
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Eliminar</button>
+  </form>
+{% endblock %}
+
+{% block dashboard_content %}
+  <div class="row">
+    <div class="col-lg-10">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Ficha</h2>
+        </div>
+        <div class="card-body">
+          <div class="datagrid">
+            <div class="datagrid-item">
+              <div class="datagrid-title">Clienta</div>
+              <div class="datagrid-content">
+                <a href="{% url 'clientes:detalle' attention.client.pk %}">{{ attention.client }}</a>
+              </div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Reserva</div>
+              <div class="datagrid-content">
+                {% if attention.reservation %}
+                  <a href="{% url 'reservas:detalle' attention.reservation.pk %}">
+                    Reserva #{{ attention.reservation.pk }}
+                  </a>
+                {% else %}
+                  Sin reserva
+                {% endif %}
+              </div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Profesional</div>
+              <div class="datagrid-content">
+                <a href="{% url 'profesionales:detalle' attention.professional.pk %}">{{ attention.professional }}</a>
+              </div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Fecha de atención</div>
+              <div class="datagrid-content">{{ attention.performed_at|date:"j/n/Y H:i" }}</div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Observaciones</div>
+              <div class="datagrid-content">{{ attention.notes|default:"—" }}</div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Creada</div>
+              <div class="datagrid-content">{{ attention.created_at|date:"j/n/Y H:i" }}</div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Actualizada</div>
+              <div class="datagrid-content">{{ attention.updated_at|date:"j/n/Y H:i" }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mt-3">
+        <div class="card-header">
+          <h2 class="card-title">Servicios</h2>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-vcenter card-table">
+            <thead>
+              <tr>
+                <th scope="col">Servicio</th>
+                <th scope="col">Cantidad</th>
+                <th scope="col">Precio unitario</th>
+                <th scope="col">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in attention.items.all %}
+                <tr>
+                  <td>{{ item.service }}</td>
+                  <td>{{ item.quantity }}</td>
+                  <td>{{ item.unit_price_gs|guaranies }}</td>
+                  <td>{{ item.line_total_gs|guaranies }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="card-body">
+          <div class="datagrid">
+            <div class="datagrid-item">
+              <div class="datagrid-title">Subtotal de servicios</div>
+              <div class="datagrid-content">{{ attention.services_subtotal_gs|guaranies }}</div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Cargo adicional</div>
+              <div class="datagrid-content">
+                {{ attention.additional_charge_gs|guaranies }}
+                {% if attention.additional_charge_description %}
+                  · {{ attention.additional_charge_description }}
+                {% endif %}
+              </div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Total</div>
+              <div class="datagrid-content fw-bold">{{ attention.total_price_gs|guaranies }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

@@ -115,7 +115,12 @@ class Client(models.Model):
         super().save(*args, **kwargs)
 
     def has_service_history(self):
-        """True si la clienta tiene reservas. Esas reservas impiden eliminarla."""
+        """True si la clienta tiene reservas o atenciones. Eso impide eliminarla."""
         if self.pk is None:
             return False
-        return self.reservations.exists()
+        if self.reservations.exists():
+            return True
+        performed = getattr(self, "performed_services", None)
+        if performed is None:
+            return False
+        return performed.exists()

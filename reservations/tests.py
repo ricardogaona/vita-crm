@@ -188,7 +188,7 @@ class ReservationViewTests(TestCase):
         self.assertContains(response, "Gomez, Ana")
         self.assertContains(response, "Pendiente")
         self.assertContains(response, "Ventana")
-        self.assertContains(response, "Los servicios realizados aparecerán cuando exista ese módulo.")
+        self.assertContains(response, "Esta reserva todavía no tiene servicios realizados.")
         self.assertContains(response, "Eliminar")
 
     def test_list_filters_by_client_date_and_status(self):

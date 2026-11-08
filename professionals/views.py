@@ -25,19 +25,17 @@ def _service_history(professional):
     if performed_services is None:
         return None
     rows = []
-    for service in performed_services.all():
+    for service in performed_services.select_related("client", "reservation"):
         reservation = getattr(service, "reservation", None)
-        client = getattr(reservation, "client", None) if reservation is not None else None
-        performed_on = None
-        for name in ("performed_on", "performed_at", "date", "service_date"):
-            performed_on = getattr(service, name, None)
-            if performed_on:
-                break
+        client = getattr(service, "client", None)
+        if client is None and reservation is not None:
+            client = getattr(reservation, "client", None)
         rows.append(
             {
-                "performed_on": performed_on,
+                "performed_on": getattr(service, "performed_at", None),
                 "reservation": reservation,
                 "client": client,
+                "attention": service if getattr(service, "pk", None) else None,
             }
         )
     return rows

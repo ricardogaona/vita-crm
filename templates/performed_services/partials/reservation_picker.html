@@ -1,0 +1,42 @@
+<div id="attention-reservation-picker">
+  <label class="form-label" for="id_reservation_search">
+    Reserva
+    <span class="text-danger" aria-hidden="true">*</span>
+    <span class="visually-hidden"> (obligatorio)</span>
+  </label>
+  <input
+    type="search"
+    id="id_reservation_search"
+    name="reserva_q"
+    class="form-control"
+    placeholder="Clienta, teléfono, documento o número de reserva"
+    autocomplete="off"
+    aria-label="Buscar reserva"
+    hx-get="{% url 'atenciones:reservas_buscar' %}{% if current_reservation_id %}?actual={{ current_reservation_id }}{% endif %}"
+    hx-trigger="keyup changed delay:300ms, search"
+    hx-target="#reservation-search-results"
+    hx-on:keydown="if (event.key === 'Enter') event.preventDefault()"
+  >
+  <div id="reservation-search-results" class="mt-2"></div>
+  <div class="form-hint mt-2" id="attention-reservation-selected">
+    {% if selected_reservation %}
+      Reserva #{{ selected_reservation.pk }} · {{ selected_reservation.client }} · {{ selected_reservation.scheduled_at|date:"j/n/Y H:i" }}
+      <div>Clienta: {{ selected_reservation.client }}</div>
+    {% else %}
+      Ninguna reserva seleccionada.
+    {% endif %}
+  </div>
+  <input
+    type="hidden"
+    name="reservation"
+    id="id_reservation"
+    value="{% if selected_reservation %}{{ selected_reservation.pk }}{% elif reservation_value %}{{ reservation_value }}{% endif %}"
+  >
+  {% if form and form.reservation.errors %}
+    <div class="invalid-feedback d-block" id="id_reservation-error">
+      {% for error in form.reservation.errors %}
+        <div>{{ error }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>

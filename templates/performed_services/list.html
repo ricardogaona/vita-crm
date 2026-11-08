@@ -1,0 +1,107 @@
+{% extends "layouts/dashboard.html" %}
+{% load money %}
+
+{% block title %}Atenciones · Vita CRM{% endblock %}
+
+{% block page_actions %}
+  <a class="btn btn-primary" href="{% url 'atenciones:nueva' %}">
+    <i class="ti ti-plus" aria-hidden="true"></i>
+    Nueva atención
+  </a>
+{% endblock %}
+
+{% block dashboard_content %}
+  <div class="card">
+    <div class="card-header">
+      <form method="get" action="{% url 'atenciones:lista' %}" role="search">
+        <div class="row g-2">
+          <div class="col-md">
+            <input
+              type="search"
+              name="q"
+              value="{{ query }}"
+              class="form-control"
+              placeholder="Nombre, apellido, teléfono o documento"
+              aria-label="Buscar por clienta"
+            >
+          </div>
+          <div class="col-md-3">
+            <select name="profesional" class="form-select" aria-label="Profesional">
+              <option value="" {% if not profesional %}selected{% endif %}>Todas</option>
+              {% for professional in professionals %}
+                <option value="{{ professional.pk }}" {% if profesional == professional.pk|stringformat:"s" %}selected{% endif %}>
+                  {{ professional }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-2">
+            <input
+              type="date"
+              name="desde"
+              value="{{ desde }}"
+              class="form-control"
+              aria-label="Desde"
+            >
+          </div>
+          <div class="col-md-2">
+            <input
+              type="date"
+              name="hasta"
+              value="{{ hasta }}"
+              class="form-control"
+              aria-label="Hasta"
+            >
+          </div>
+          <div class="col-md-auto">
+            <button class="btn btn-primary" type="submit">Buscar</button>
+          </div>
+        </div>
+      </form>
+    </div>
+    {% if page_obj.object_list %}
+      <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+          <thead>
+            <tr>
+              <th scope="col">Fecha</th>
+              <th scope="col">Clienta</th>
+              <th scope="col">Profesional</th>
+              <th scope="col">Servicios</th>
+              <th scope="col">Total</th>
+              <th scope="col">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for attention in page_obj %}
+              <tr>
+                <td>{{ attention.performed_at|date:"j/n/Y H:i" }}</td>
+                <td>
+                  <a href="{% url 'atenciones:detalle' attention.pk %}">{{ attention.client }}</a>
+                </td>
+                <td>{{ attention.professional }}</td>
+                <td>{{ attention.item_count }}</td>
+                <td>{{ attention.total_price_gs|guaranies }}</td>
+                <td>
+                  <a href="{% url 'atenciones:detalle' attention.pk %}">Ver</a>
+                  <a href="{% url 'atenciones:editar' attention.pk %}">Editar</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="card-footer d-flex justify-content-center">
+        {% include "components/pagination.html" %}
+      </div>
+    {% else %}
+      <div class="card-body">
+        {% if query or profesional or desde or hasta %}
+          {% include "components/empty_state.html" with title="Sin resultados" message="No hay atenciones que coincidan con la búsqueda." icon="ti-search" %}
+        {% else %}
+          {% include "components/empty_state.html" with title="Sin atenciones" message="Todavía no hay atenciones cargadas." icon="ti-clipboard-check" %}
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

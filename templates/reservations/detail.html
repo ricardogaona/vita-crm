@@ -82,28 +82,11 @@
         <div class="card-header">
           <h3 class="card-title">Servicios realizados</h3>
         </div>
-        {% if performed_services is None %}
+        {% if performed_service %}
           <div class="card-body">
-            <p class="text-secondary mb-0">
-              Los servicios realizados aparecerán cuando exista ese módulo.
+            <p class="mb-0">
+              <a href="{% url 'atenciones:detalle' performed_service.pk %}">{{ performed_service }}</a>
             </p>
-          </div>
-        {% elif performed_services %}
-          <div class="table-responsive">
-            <table class="table table-vcenter card-table">
-              <thead>
-                <tr>
-                  <th scope="col">Servicio</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for service in performed_services %}
-                  <tr>
-                    <td>{{ service }}</td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
           </div>
         {% else %}
           <div class="card-body">

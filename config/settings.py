@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "reservations",
     "professionals",
     "services",
+    "performed_services",
     "ui",
 ]
 

@@ -60,6 +60,18 @@
         </li>
         <li class="nav-item">
           <a
+            class="nav-link{% if request.resolver_match.namespace == 'atenciones' %} active{% endif %}"
+            href="{% url 'atenciones:lista' %}"
+            {% if request.resolver_match.namespace == 'atenciones' %}aria-current="page"{% endif %}
+          >
+            <span class="nav-link-icon">
+              <i class="ti ti-clipboard-check" aria-hidden="true"></i>
+            </span>
+            <span class="nav-link-title">Atenciones</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a
             class="nav-link{% if request.resolver_match.namespace == 'profesionales' %} active{% endif %}"
             href="{% url 'profesionales:lista' %}"
             {% if request.resolver_match.namespace == 'profesionales' %}aria-current="page"{% endif %}

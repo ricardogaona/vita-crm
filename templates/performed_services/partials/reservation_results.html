@@ -1,0 +1,20 @@
+{% if query %}
+  {% if reservations %}
+    <div class="list-group">
+      {% for reservation in reservations %}
+        <button
+          type="button"
+          class="list-group-item list-group-item-action"
+          hx-get="{% url 'atenciones:reserva_seleccionar' reservation.pk %}{% if current_reservation_id %}?actual={{ current_reservation_id }}{% endif %}"
+          hx-target="#attention-reservation-picker"
+          hx-swap="outerHTML"
+        >
+          #{{ reservation.pk }} · {{ reservation.client }}
+          <span class="text-secondary">· {{ reservation.scheduled_at|date:"j/n/Y H:i" }}</span>
+        </button>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="text-secondary">No hay reservas disponibles que coincidan.</div>
+  {% endif %}
+{% endif %}

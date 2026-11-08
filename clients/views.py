@@ -104,7 +104,7 @@ def client_delete(request, pk):
     if client.has_service_history():
         messages.error(
             request,
-            "No se puede eliminar esta clienta porque tiene historial de reservas. "
+            "No se puede eliminar esta clienta porque tiene reservas o atenciones. "
             "Podés desactivarla.",
         )
         return redirect("clientes:detalle", pk=client.pk)

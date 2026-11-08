@@ -1,0 +1,54 @@
+{% load money %}
+<tr
+  data-item-row
+  {% if form.instance.pk %}data-existing="true"{% endif %}
+  {% if form.DELETE.value %}hidden{% endif %}
+>
+  <td>
+    {{ form.id }}
+    {% if form.DELETE %}
+      <div class="visually-hidden">{{ form.DELETE }}</div>
+    {% endif %}
+    {{ form.service }}
+    {% if form.service.errors %}
+      <div class="invalid-feedback d-block">
+        {% for error in form.service.errors %}
+          <div>{{ error }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </td>
+  <td id="{{ form.prefix }}-price">
+    {{ form.unit_price_gs }}
+    {% if form.unit_price_gs.errors %}
+      <div class="invalid-feedback d-block">
+        {% for error in form.unit_price_gs.errors %}
+          <div>{{ error }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </td>
+  <td>
+    {{ form.quantity }}
+    {% if form.quantity.errors %}
+      <div class="invalid-feedback d-block">
+        {% for error in form.quantity.errors %}
+          <div>{{ error }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </td>
+  <td data-subtotal>{{ form.unit_price_gs.value|mul:form.quantity.value|guaranies }}</td>
+  <td class="text-end">
+    <button type="button" class="btn btn-sm" data-remove-item>Quitar</button>
+  </td>
+</tr>
+{% if next_total %}
+  <input
+    type="hidden"
+    name="items-TOTAL_FORMS"
+    value="{{ next_total }}"
+    id="id_items-TOTAL_FORMS"
+    hx-swap-oob="true"
+  >
+{% endif %}
