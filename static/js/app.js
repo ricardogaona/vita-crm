@@ -51,17 +51,14 @@
     initWidgets(detail.target || event.target);
   });
 
-  document.addEventListener("closeNewClientModal", function () {
-    var modalEl = document.getElementById("new-client-modal");
-    var api = bootstrapApi();
-    if (!modalEl || !api || !api.Modal) {
-      return;
-    }
+  function blurIfInside(modalEl) {
     var active = document.activeElement;
     if (active && modalEl.contains(active) && typeof active.blur === "function") {
       active.blur();
     }
-    var modal = api.Modal.getInstance(modalEl) || new api.Modal(modalEl);
+  }
+
+  function hideNewClientModal(modalEl, modal) {
     modalEl.addEventListener(
       "hidden.bs.modal",
       function () {
@@ -73,5 +70,37 @@
       { once: true }
     );
     modal.hide();
+    // The focus trap turns off as hide() starts. Blurring earlier snaps
+    // focus back into the form and the dialog stays open.
+    blurIfInside(modalEl);
+  }
+
+  document.addEventListener("closeNewClientModal", function () {
+    var modalEl = document.getElementById("new-client-modal");
+    var api = bootstrapApi();
+    if (!modalEl || !api || !api.Modal) {
+      return;
+    }
+    var modal = api.Modal.getInstance(modalEl);
+    if (!modal) {
+      return;
+    }
+    // HTMX is still inside afterSettle when this event fires. Closing on
+    // the next turn runs after that settle releases focus.
+    window.setTimeout(function () {
+      if (!modal._isTransitioning) {
+        hideNewClientModal(modalEl, modal);
+        return;
+      }
+      function afterTransition() {
+        modalEl.removeEventListener("shown.bs.modal", afterTransition);
+        modalEl.removeEventListener("hidden.bs.modal", afterTransition);
+        if (modal._isShown) {
+          hideNewClientModal(modalEl, modal);
+        }
+      }
+      modalEl.addEventListener("shown.bs.modal", afterTransition);
+      modalEl.addEventListener("hidden.bs.modal", afterTransition);
+    }, 0);
   });
 })();

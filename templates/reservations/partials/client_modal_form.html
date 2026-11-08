@@ -12,6 +12,7 @@
   hx-post="{% url 'reservas:clienta_nueva' %}"
   hx-target="#new-client-modal-body"
   hx-swap="innerHTML"
+  hx-on:close-new-client-modal="var modalEl = document.getElementById('new-client-modal'); var api = window.tabler && window.tabler.bootstrap; var modal = api && api.Modal && api.Modal.getInstance(modalEl); if (!modal) return; window.setTimeout(function () { function hide() { modalEl.addEventListener('hidden.bs.modal', function () { var body = document.getElementById('new-client-modal-body'); if (body) body.replaceChildren(); }, { once: true }); modal.hide(); var active = document.activeElement; if (active && modalEl.contains(active) && active.blur) active.blur(); } if (!modal._isTransitioning) { hide(); return; } function afterTransition() { modalEl.removeEventListener('shown.bs.modal', afterTransition); modalEl.removeEventListener('hidden.bs.modal', afterTransition); if (modal._isShown) hide(); } modalEl.addEventListener('shown.bs.modal', afterTransition); modalEl.addEventListener('hidden.bs.modal', afterTransition); }, 0);"
 >
   {% csrf_token %}
   {% for field in form %}
