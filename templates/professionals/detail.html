@@ -2,23 +2,6 @@
 
 {% block title %}{{ professional }} · Vita CRM{% endblock %}
 
-{% block page_actions %}
-  <a class="btn btn-primary" href="{% url 'profesionales:editar' professional.pk %}">Editar</a>
-  {% if professional.has_service_history %}
-    {% if professional.is_active %}
-      <form method="post" action="{% url 'profesionales:desactivar' professional.pk %}">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-warning">Desactivar</button>
-      </form>
-    {% endif %}
-  {% else %}
-    <form method="post" action="{% url 'profesionales:eliminar' professional.pk %}">
-      {% csrf_token %}
-      <button type="submit" class="btn btn-danger">Eliminar</button>
-    </form>
-  {% endif %}
-{% endblock %}
-
 {% block dashboard_content %}
   <div class="row">
     <div class="col-lg-8">

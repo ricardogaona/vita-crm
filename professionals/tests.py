@@ -1,5 +1,4 @@
 from datetime import date
-from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -7,6 +6,7 @@ from django.db import IntegrityError, transaction
 from django.test import TestCase
 from django.urls import reverse
 
+from .forms import ProfessionalForm
 from .models import Professional
 
 User = get_user_model()
@@ -281,34 +281,20 @@ class ProfessionalModelTests(TestCase):
         self.assertEqual(Professional.objects.by_status("").count(), 2)
 
 
-class ProfessionalViewTests(TestCase):
-    def setUp(self):
-        self.user = User.objects.create_user("visitante", password="clave-segura")
-        self.client.force_login(self.user)
-
-    def test_anonymous_user_goes_to_login(self):
-        self.client.logout()
-        response = self.client.get(reverse("profesionales:lista"))
-
-        self.assertEqual(response.status_code, 302)
-        self.assertIn("/admin/login/", response.url)
-        self.assertIn("next=/profesionales/", response.url)
-
-    def test_create_registers_an_active_professional(self):
-        response = self.client.post(
-            reverse("profesionales:nueva"),
+class ProfessionalFormTests(TestCase):
+    def test_save_normalizes_text_and_starts_active(self):
+        form = ProfessionalForm(
             payload(
                 first_name="  Ana  ",
                 last_name=" Gomez ",
                 phone="+595 981 111",
                 email="  ana@example.com  ",
-            ),
+            )
         )
-        professional = Professional.objects.get()
 
-        self.assertRedirects(
-            response, reverse("profesionales:detalle", kwargs={"pk": professional.pk})
-        )
+        self.assertTrue(form.is_valid(), form.errors)
+        professional = form.save()
+
         self.assertEqual(professional.first_name, "Ana")
         self.assertEqual(professional.last_name, "Gomez")
         self.assertEqual(professional.phone, "+595 981 111")
@@ -316,32 +302,26 @@ class ProfessionalViewTests(TestCase):
         self.assertTrue(professional.is_active)
         self.assertIsNotNone(professional.created_at)
 
-    def test_create_form_defaults(self):
-        response = self.client.get(reverse("profesionales:nueva"))
-        form = response.context["form"]
+    def test_unbound_form_defaults_to_active_without_timestamps(self):
+        form = ProfessionalForm()
 
         self.assertTrue(form["is_active"].value())
         self.assertNotIn("created_at", form.fields)
         self.assertNotIn("updated_at", form.fields)
-        self.assertContains(response, "novalidate")
 
     def test_blank_name_shows_a_form_error(self):
-        response = self.client.post(reverse("profesionales:nueva"), payload(first_name="   "))
+        form = ProfessionalForm(payload(first_name="   "))
 
-        self.assertEqual(response.status_code, 200)
-        self.assertIn("first_name", response.context["form"].errors)
-        self.assertContains(response, "Indicá el nombre.")
+        self.assertFalse(form.is_valid())
+        self.assertIn("first_name", form.errors)
+        self.assertIn("Indicá el nombre.", form.errors["first_name"])
         self.assertFalse(Professional.objects.exists())
 
     def test_invalid_email_shows_a_form_error(self):
-        response = self.client.post(
-            reverse("profesionales:nueva"),
-            payload(email="no-es-correo"),
-        )
+        form = ProfessionalForm(payload(email="no-es-correo"))
 
-        self.assertEqual(response.status_code, 200)
-        error = response.context["form"].errors["email"][0]
-        self.assertContains(response, error)
+        self.assertFalse(form.is_valid())
+        self.assertIn("email", form.errors)
         self.assertFalse(Professional.objects.exists())
 
     def test_duplicate_document_shows_a_form_error(self):
@@ -352,18 +332,20 @@ class ProfessionalViewTests(TestCase):
             phone="+595981",
             email="ana@example.com",
         )
-        response = self.client.post(
-            reverse("profesionales:nueva"),
+        form = ProfessionalForm(
             payload(
                 first_name="Beatriz",
                 identification_number="1234567",
                 email="beatriz@example.com",
-            ),
+            )
         )
 
-        self.assertEqual(response.status_code, 200)
-        self.assertIn("identification_number", response.context["form"].errors)
-        self.assertContains(response, "Ya hay una profesional con este documento.")
+        self.assertFalse(form.is_valid())
+        self.assertIn("identification_number", form.errors)
+        self.assertIn(
+            "Ya hay una profesional con este documento.",
+            form.errors["identification_number"],
+        )
         self.assertEqual(Professional.objects.count(), 1)
 
     def test_edit_stores_optional_dates_and_can_deactivate(self):
@@ -374,8 +356,7 @@ class ProfessionalViewTests(TestCase):
             phone="+595981",
             email="ana@example.com",
         )
-        response = self.client.post(
-            reverse("profesionales:editar", kwargs={"pk": professional.pk}),
+        form = ProfessionalForm(
             payload(
                 phone="+595981000",
                 email="ana@spa.test",
@@ -384,11 +365,11 @@ class ProfessionalViewTests(TestCase):
                 notes="Turno mañana.",
                 is_active="",
             ),
+            instance=professional,
         )
 
-        self.assertRedirects(
-            response, reverse("profesionales:detalle", kwargs={"pk": professional.pk})
-        )
+        self.assertTrue(form.is_valid(), form.errors)
+        form.save()
         professional.refresh_from_db()
         self.assertEqual(professional.phone, "+595981000")
         self.assertEqual(professional.email, "ana@spa.test")
@@ -406,15 +387,57 @@ class ProfessionalViewTests(TestCase):
             phone="+595981",
             email="ana@example.com",
         )
-        response = self.client.post(
-            reverse("profesionales:editar", kwargs={"pk": professional.pk}),
+        form = ProfessionalForm(
             payload(start_date="2024-04-02", end_date="2024-04-01"),
+            instance=professional,
         )
 
-        self.assertEqual(response.status_code, 200)
-        self.assertIn("end_date", response.context["form"].errors)
+        self.assertFalse(form.is_valid())
+        self.assertIn("end_date", form.errors)
         professional.refresh_from_db()
         self.assertIsNone(professional.end_date)
+
+
+class ProfessionalViewTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user("visitante", password="clave-segura")
+        self.client.force_login(self.user)
+
+    def test_anonymous_user_goes_to_login(self):
+        self.client.logout()
+        response = self.client.get(reverse("profesionales:lista"))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/admin/login/", response.url)
+        self.assertIn("next=/profesionales/", response.url)
+
+    def test_list_has_no_create_action(self):
+        response = self.client.get(reverse("profesionales:lista"))
+
+        self.assertNotContains(response, "Nueva profesional")
+
+    def test_write_routes_are_not_published(self):
+        professional = Professional.objects.create(
+            first_name="Ana",
+            last_name="Gomez",
+            identification_number="1234567",
+            phone="+595981",
+            email="ana@example.com",
+        )
+        paths = [
+            "/profesionales/nueva/",
+            f"/profesionales/{professional.pk}/editar/",
+            f"/profesionales/{professional.pk}/desactivar/",
+            f"/profesionales/{professional.pk}/eliminar/",
+        ]
+
+        for path in paths:
+            self.assertEqual(self.client.get(path).status_code, 404)
+            self.assertEqual(self.client.post(path, payload()).status_code, 404)
+
+        professional.refresh_from_db()
+        self.assertTrue(professional.is_active)
+        self.assertEqual(Professional.objects.count(), 1)
 
     def test_inactive_professional_stays_in_the_filtered_list(self):
         Professional.objects.create(
@@ -480,81 +503,7 @@ class ProfessionalViewTests(TestCase):
         self.assertContains(response, "ana@example.com")
         self.assertContains(response, "Creada")
         self.assertContains(response, "Esta profesional todavía no tiene servicios realizados.")
-        self.assertContains(response, "Eliminar")
+        self.assertContains(response, reverse("profesionales:lista"))
+        self.assertNotContains(response, "Editar")
         self.assertNotContains(response, "Desactivar")
-
-    def test_delete_removes_a_professional_without_history(self):
-        professional = Professional.objects.create(
-            first_name="Ana",
-            last_name="Gomez",
-            identification_number="1234567",
-            phone="+595981",
-            email="ana@example.com",
-        )
-        response = self.client.post(
-            reverse("profesionales:eliminar", kwargs={"pk": professional.pk})
-        )
-
-        self.assertRedirects(response, reverse("profesionales:lista"))
-        self.assertFalse(Professional.objects.filter(pk=professional.pk).exists())
-
-    def test_delete_is_blocked_when_there_is_service_history(self):
-        professional = Professional.objects.create(
-            first_name="Ana",
-            last_name="Gomez",
-            identification_number="1234567",
-            phone="+595981",
-            email="ana@example.com",
-        )
-        with patch.object(Professional, "has_service_history", return_value=True):
-            detail = self.client.get(
-                reverse("profesionales:detalle", kwargs={"pk": professional.pk})
-            )
-            response = self.client.post(
-                reverse("profesionales:eliminar", kwargs={"pk": professional.pk}),
-                follow=True,
-            )
-
-        self.assertContains(detail, "Desactivar")
-        self.assertNotContains(detail, "Eliminar")
-        self.assertContains(response, "Podés desactivarla")
-        self.assertTrue(Professional.objects.filter(pk=professional.pk).exists())
-
-    def test_deactivate_keeps_the_professional(self):
-        professional = Professional.objects.create(
-            first_name="Ana",
-            last_name="Gomez",
-            identification_number="1234567",
-            phone="+595981",
-            email="ana@example.com",
-        )
-        response = self.client.post(
-            reverse("profesionales:desactivar", kwargs={"pk": professional.pk})
-        )
-
-        self.assertRedirects(
-            response, reverse("profesionales:detalle", kwargs={"pk": professional.pk})
-        )
-        professional.refresh_from_db()
-        self.assertFalse(professional.is_active)
-
-    def test_delete_and_deactivate_reject_get(self):
-        professional = Professional.objects.create(
-            first_name="Ana",
-            last_name="Gomez",
-            identification_number="1234567",
-            phone="+595981",
-            email="ana@example.com",
-        )
-        self.assertEqual(
-            self.client.get(
-                reverse("profesionales:eliminar", kwargs={"pk": professional.pk})
-            ).status_code,
-            405,
-        )
-        self.assertEqual(
-            self.client.get(
-                reverse("profesionales:desactivar", kwargs={"pk": professional.pk})
-            ).status_code,
-            405,
-        )
+        self.assertNotContains(response, "Eliminar")
