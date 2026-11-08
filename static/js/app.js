@@ -57,7 +57,21 @@
     if (!modalEl || !api || !api.Modal) {
       return;
     }
+    var active = document.activeElement;
+    if (active && modalEl.contains(active) && typeof active.blur === "function") {
+      active.blur();
+    }
     var modal = api.Modal.getInstance(modalEl) || new api.Modal(modalEl);
+    modalEl.addEventListener(
+      "hidden.bs.modal",
+      function () {
+        var body = document.getElementById("new-client-modal-body");
+        if (body) {
+          body.replaceChildren();
+        }
+      },
+      { once: true }
+    );
     modal.hide();
   });
 })();

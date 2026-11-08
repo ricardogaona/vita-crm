@@ -177,8 +177,9 @@ class ReservationViewTests(TestCase):
         reservation = self._reservation()
         edited = self.client.get(reverse("reservas:editar", kwargs={"pk": reservation.pk}))
         self.assertContains(edited, "+ Nueva clienta")
-        self.assertContains(edited, "Seleccionada:")
-        self.assertContains(edited, "Gomez, Ana")
+        self.assertNotContains(edited, "Seleccionada:")
+        self.assertContains(edited, 'value="Gomez, Ana"')
+        self.assertContains(edited, "Quitar clienta")
         self.assertContains(edited, "2026-03-15T15:00")
 
     def test_detail_shows_the_reservation_without_performed_services(self):
@@ -301,8 +302,9 @@ class ClientPickerTests(TestCase):
         )
 
         self.assertContains(response, 'id="reservation-client-picker"')
-        self.assertContains(response, "Seleccionada:")
-        self.assertContains(response, "Gomez, Ana")
+        self.assertNotContains(response, "Seleccionada:")
+        self.assertContains(response, 'value="Gomez, Ana"')
+        self.assertContains(response, "Quitar clienta")
         self.assertContains(response, f'value="{self.client_record.pk}"')
 
     def test_modal_creates_a_client_with_name_only_and_selects_her(self):
@@ -313,10 +315,13 @@ class ClientPickerTests(TestCase):
         )
         created = Client.objects.get(first_name="Carla", last_name="Lopez")
 
-        self.assertEqual(response.headers["HX-Trigger"], "closeNewClientModal")
+        self.assertEqual(response.headers["HX-Trigger-After-Settle"], "closeNewClientModal")
+        self.assertEqual(response.headers["HX-Reswap"], "none")
+        self.assertNotIn("HX-Trigger", response.headers)
         self.assertContains(response, "hx-swap-oob")
-        self.assertContains(response, "Seleccionada:")
-        self.assertContains(response, "Lopez, Carla")
+        self.assertNotContains(response, "Seleccionada:")
+        self.assertContains(response, 'value="Lopez, Carla"')
+        self.assertContains(response, "Quitar clienta")
         self.assertContains(response, f'value="{created.pk}"')
         self.assertEqual(created.email, "")
         self.assertEqual(created.phone, "")
@@ -332,6 +337,8 @@ class ClientPickerTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertNotIn("HX-Trigger", response.headers)
+        self.assertNotIn("HX-Trigger-After-Settle", response.headers)
+        self.assertNotIn("HX-Reswap", response.headers)
         self.assertContains(response, 'id="id_first_name-error"')
         self.assertContains(response, 'id="id_email-error"')
         self.assertContains(response, 'id="new-client-modal-body"', count=0)

@@ -220,7 +220,9 @@ def client_create_modal(request):
             "reservations/partials/client_created.html",
             {"selected_client": client},
         )
-        response["HX-Trigger"] = "closeNewClientModal"
+        # Let the picker swap settle, then ask the page to hide the modal.
+        response["HX-Reswap"] = "none"
+        response["HX-Trigger-After-Settle"] = "closeNewClientModal"
         return response
     return render(
         request,

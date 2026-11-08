@@ -17,3 +17,43 @@
 .htmx-request.htmx-indicator {
   display: inline;
 }
+
+/* The clear control sits inside the field. A flex item's default
+   min-width would grow with the selected text and shift the row. */
+.picker-field {
+  min-width: 0;
+}
+
+.picker-control {
+  position: relative;
+}
+
+.picker-control .form-control {
+  padding-right: 2.25rem;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.picker-clear {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  z-index: 2;
+  transform: translateY(-50%);
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--tblr-secondary);
+  line-height: 1;
+}
+
+.picker-clear[hidden] {
+  display: none !important;
+}
+
+.picker-clear:hover {
+  color: var(--tblr-body-color);
+}

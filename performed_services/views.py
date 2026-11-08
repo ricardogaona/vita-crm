@@ -270,7 +270,7 @@ def performed_service_delete(request, pk):
 @vary_on_headers("HX-Request")
 @require_GET
 def reservation_search(request):
-    query = request.GET.get("q", "").strip()
+    query = (request.GET.get("reserva_q") or request.GET.get("q") or "").strip()
     include_pk = _include_pk(request.GET.get("actual"))
     reservations = Reservation.objects.none()
     if query:

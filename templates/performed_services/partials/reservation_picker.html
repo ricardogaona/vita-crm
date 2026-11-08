@@ -4,27 +4,36 @@
     <span class="text-danger" aria-hidden="true">*</span>
     <span class="visually-hidden"> (obligatorio)</span>
   </label>
-  <input
-    type="search"
-    id="id_reservation_search"
-    name="reserva_q"
-    class="form-control"
-    placeholder="Clienta, teléfono, documento o número de reserva"
-    autocomplete="off"
-    aria-label="Buscar reserva"
-    hx-get="{% url 'atenciones:reservas_buscar' %}{% if current_reservation_id %}?actual={{ current_reservation_id }}{% endif %}"
-    hx-trigger="keyup changed delay:300ms, search"
-    hx-target="#reservation-search-results"
-    hx-on:keydown="if (event.key === 'Enter') event.preventDefault()"
-  >
-  <div id="reservation-search-results" class="mt-2"></div>
-  <div class="form-hint mt-2" id="attention-reservation-selected">
-    {% if selected_reservation %}
-      Reserva #{{ selected_reservation.pk }} · {{ selected_reservation.client }} · {{ selected_reservation.scheduled_at|date:"j/n/Y H:i" }}
-      <div>Clienta: {{ selected_reservation.client }}</div>
-    {% else %}
-      Ninguna reserva seleccionada.
-    {% endif %}
+  <div class="picker-field">
+    <div class="picker-control position-relative">
+      <input
+        type="text"
+        id="id_reservation_search"
+        name="reserva_q"
+        class="form-control pe-5"
+        placeholder="Clienta, teléfono, documento o número de reserva"
+        autocomplete="off"
+        aria-label="Buscar reserva"
+        {% if selected_reservation %}readonly value="RES-{{ selected_reservation.pk|stringformat:"04d" }} · {{ selected_reservation.client }}"{% endif %}
+        hx-get="{% url 'atenciones:reservas_buscar' %}{% if current_reservation_id %}?actual={{ current_reservation_id }}{% endif %}"
+        hx-trigger="keyup changed delay:300ms"
+        hx-target="#reservation-search-results"
+        hx-on:keydown="if (event.key === 'Enter') event.preventDefault()"
+      >
+      <button
+        type="button"
+        class="picker-clear position-absolute top-50 end-0 translate-middle-y border-0 bg-transparent text-secondary lh-1 p-2"
+        data-picker-clear
+        data-picker-hidden="id_reservation"
+        data-picker-search="id_reservation_search"
+        data-picker-results="reservation-search-results"
+        aria-label="Quitar reserva"
+        {% if not selected_reservation %}hidden{% endif %}
+      >
+        <i class="ti ti-x" aria-hidden="true"></i>
+      </button>
+    </div>
+    <div id="reservation-search-results" class="mt-2"></div>
   </div>
   <input
     type="hidden"

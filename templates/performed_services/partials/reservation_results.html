@@ -9,8 +9,10 @@
           hx-target="#attention-reservation-picker"
           hx-swap="outerHTML"
         >
-          #{{ reservation.pk }} · {{ reservation.client }}
-          <span class="text-secondary">· {{ reservation.scheduled_at|date:"j/n/Y H:i" }}</span>
+          RES-{{ reservation.pk|stringformat:"04d" }} · {{ reservation.client }}
+          {% if reservation.client.identification_number %}
+            <span class="text-secondary"> · {{ reservation.client.identification_number }}</span>
+          {% endif %}
         </button>
       {% endfor %}
     </div>

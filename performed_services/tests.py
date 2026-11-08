@@ -604,7 +604,35 @@ class PerformedServiceViewTests(TestCase):
             reverse("atenciones:reservas_buscar"),
             {"q": "Gomez"},
         )
-        self.assertNotContains(response, f"#{self.reservation.pk}")
-        available = self.client.get(reverse("atenciones:reservas_buscar"), {"q": "Diaz"})
-        self.assertContains(available, f"#{other.pk}")
-        self.assertContains(available, "Diaz, Beatriz")
+        self.assertNotContains(response, f"RES-{self.reservation.pk:04d}")
+        self.other_client.identification_number = "7788990"
+        self.other_client.save()
+        by_name = self.client.get(
+            reverse("atenciones:reservas_buscar"),
+            {"reserva_q": "Diaz"},
+        )
+        code = f"RES-{other.pk:04d}"
+        self.assertContains(by_name, code)
+        self.assertContains(by_name, "Diaz, Beatriz")
+        self.assertNotContains(by_name, "1234567")
+        by_document = self.client.get(
+            reverse("atenciones:reservas_buscar"),
+            {"reserva_q": "7788990"},
+        )
+        self.assertContains(by_document, code)
+        self.assertContains(by_document, "7788990")
+        self.assertNotContains(by_document, f"RES-{self.reservation.pk:04d}")
+
+    def test_select_shows_the_code_and_client_inside_the_field(self):
+        response = self.client.get(
+            reverse("atenciones:reserva_seleccionar", kwargs={"pk": self.reservation.pk}),
+            HTTP_HX_REQUEST="true",
+        )
+        summary = f'RES-{self.reservation.pk:04d} · Gomez, Ana'
+
+        self.assertContains(response, 'id="attention-reservation-picker"')
+        self.assertContains(response, f'value="{summary}"')
+        self.assertContains(response, "Quitar reserva")
+        self.assertNotContains(response, "1234567")
+        self.assertNotContains(response, "15/3/2026")
+        self.assertContains(response, f'value="{self.reservation.pk}"')

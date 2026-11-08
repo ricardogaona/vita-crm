@@ -147,42 +147,15 @@
         }
       }
 
-      function clearText(id, message) {
-        var node = document.getElementById(id);
-        if (node) {
-          node.textContent = message;
-        }
-      }
-
       function clearReservation() {
-        var input = document.getElementById("id_reservation");
-        if (input) {
-          input.value = "";
-        }
-        clearText("attention-reservation-selected", "Ninguna reserva seleccionada.");
-        var results = document.getElementById("reservation-search-results");
-        if (results) {
-          results.innerHTML = "";
-        }
-        var search = document.getElementById("id_reservation_search");
-        if (search) {
-          search.value = "";
+        if (window.resetPicker) {
+          window.resetPicker("id_reservation_search", "id_reservation", "reservation-search-results");
         }
       }
 
       function clearClient() {
-        var input = document.getElementById("id_client");
-        if (input) {
-          input.value = "";
-        }
-        clearText("reservation-client-selected", "Ninguna clienta seleccionada.");
-        var results = document.getElementById("client-search-results");
-        if (results) {
-          results.innerHTML = "";
-        }
-        var search = document.getElementById("id_client_search");
-        if (search) {
-          search.value = "";
+        if (window.resetPicker) {
+          window.resetPicker("id_client_search", "id_client", "client-search-results");
         }
       }
 

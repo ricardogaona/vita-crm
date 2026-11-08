@@ -17,5 +17,48 @@
     <script src="{% static 'vendor/tabler/js/tabler.min.js' %}" defer></script>
     <script src="{% static 'js/app.js' %}" defer></script>
     {% block extra_js %}{% endblock %}
+    <script>
+      (function () {
+        function resetPicker(searchId, hiddenId, resultsId, options) {
+          var search = document.getElementById(searchId);
+          var hidden = document.getElementById(hiddenId);
+          var results = document.getElementById(resultsId);
+          var button = document.querySelector(
+            '[data-picker-clear][data-picker-search="' + searchId + '"]'
+          );
+          if (hidden) {
+            hidden.value = "";
+          }
+          if (search) {
+            search.value = "";
+            search.readOnly = false;
+          }
+          if (results) {
+            results.innerHTML = "";
+          }
+          if (button) {
+            button.hidden = true;
+          }
+          if (options && options.focus && search) {
+            search.focus();
+          }
+        }
+
+        window.resetPicker = resetPicker;
+
+        document.addEventListener("click", function (event) {
+          var button = event.target.closest("[data-picker-clear]");
+          if (!button) {
+            return;
+          }
+          resetPicker(
+            button.getAttribute("data-picker-search"),
+            button.getAttribute("data-picker-hidden"),
+            button.getAttribute("data-picker-results"),
+            { focus: true }
+          );
+        });
+      })();
+    </script>
   </body>
 </html>

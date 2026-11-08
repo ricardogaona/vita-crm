@@ -5,20 +5,36 @@
     <span class="visually-hidden"> (obligatorio)</span>
   </label>
   <div class="row g-2 align-items-start">
-    <div class="col">
-      <input
-        type="search"
-        id="id_client_search"
-        name="q"
-        class="form-control"
-        placeholder="Nombre, apellido, teléfono o documento"
-        autocomplete="off"
-        aria-label="Buscar clienta"
-        hx-get="{% url 'reservas:clientas_buscar' %}"
-        hx-trigger="keyup changed delay:300ms, search"
-        hx-target="#client-search-results"
-        hx-on:keydown="if (event.key === 'Enter') event.preventDefault()"
-      >
+    <div class="col picker-field">
+      <div class="picker-control position-relative">
+        <input
+          type="text"
+          id="id_client_search"
+          name="q"
+          class="form-control pe-5"
+          placeholder="Nombre, apellido, teléfono o documento"
+          autocomplete="off"
+          aria-label="Buscar clienta"
+          {% if selected_client %}readonly value="{{ selected_client }}"{% endif %}
+          hx-get="{% url 'reservas:clientas_buscar' %}"
+          hx-trigger="keyup changed delay:300ms"
+          hx-target="#client-search-results"
+          hx-on:keydown="if (event.key === 'Enter') event.preventDefault()"
+        >
+        <button
+          type="button"
+          class="picker-clear position-absolute top-50 end-0 translate-middle-y border-0 bg-transparent text-secondary lh-1 p-2"
+          data-picker-clear
+          data-picker-hidden="id_client"
+          data-picker-search="id_client_search"
+          data-picker-results="client-search-results"
+          aria-label="Quitar clienta"
+          {% if not selected_client %}hidden{% endif %}
+        >
+          <i class="ti ti-x" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div id="client-search-results" class="mt-2"></div>
     </div>
     <div class="col-auto">
       <button
@@ -34,15 +50,6 @@
       </button>
     </div>
   </div>
-  <div id="client-search-results" class="mt-2"></div>
-  {% if selected_client %}
-    <div class="form-hint mt-2" id="reservation-client-selected">
-      Seleccionada: {{ selected_client }}
-      {% if selected_client.phone %} · {{ selected_client.phone }}{% endif %}
-    </div>
-  {% else %}
-    <div class="form-hint mt-2" id="reservation-client-selected">Ninguna clienta seleccionada.</div>
-  {% endif %}
   <input type="hidden" name="client" id="id_client" value="{% if selected_client %}{{ selected_client.pk }}{% elif client_value %}{{ client_value }}{% endif %}">
   {% if form %}
     {% if form.client.errors %}
