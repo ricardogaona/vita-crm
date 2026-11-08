@@ -48,6 +48,12 @@ class DashboardShellTests(TestCase):
 
 
 class LoginRequiredTests(TestCase):
+    def test_anonymous_health_is_public(self):
+        response = self.client.get("/health")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b"ok")
+
     def test_anonymous_dashboard_redirects_to_admin_login(self):
         path = reverse("inicio")
         response = self.client.get(path)

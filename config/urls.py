@@ -1,7 +1,15 @@
 from django.contrib import admin
+from django.http import HttpResponse
 from django.urls import include, path
 
+
+def health(_request):
+    return HttpResponse("ok")
+
+
 urlpatterns = [
+    path("health", health, name="health"),
+    path("health/", health),
     path("", include("dashboard.urls")),
     path("admin/", admin.site.urls),
     path("clientes/", include("clients.urls")),

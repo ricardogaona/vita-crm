@@ -9,7 +9,9 @@ class LoginRequiredMiddleware(DjangoLoginRequiredMiddleware):
     """Exige sesión en cada vista y vuelve a la URL pedida tras el login del admin."""
 
     def process_view(self, request, view_func, view_args, view_kwargs):
-        if request.path.startswith(self._static_prefix()):
+        if request.path in {"/health", "/health/"} or request.path.startswith(
+            self._static_prefix()
+        ):
             return None
         return super().process_view(request, view_func, view_args, view_kwargs)
 
