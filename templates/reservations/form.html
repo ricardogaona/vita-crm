@@ -1,0 +1,36 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block title %}{{ page_title }} · Vita CRM{% endblock %}
+
+{% block page_actions %}
+  <a class="btn" href="{{ cancel_url }}">Volver</a>
+{% endblock %}
+
+{% block dashboard_content %}
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-body">
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger" role="alert">
+              {% for error in form.non_field_errors %}
+                <div>{{ error }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+          <form method="post" action="" novalidate>
+            {% csrf_token %}
+            {% include "reservations/partials/client_picker.html" %}
+            {% for field in form %}
+              {% if field.name != "client" %}
+                {% include "components/form_field.html" with field=field %}
+              {% endif %}
+            {% endfor %}
+            <button type="submit" class="btn btn-primary">Guardar</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% include "reservations/partials/client_modal.html" %}
+{% endblock %}

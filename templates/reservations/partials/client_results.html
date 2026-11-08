@@ -1,0 +1,25 @@
+{% if query %}
+  {% if clients %}
+    <div class="list-group">
+      {% for client in clients %}
+        <button
+          type="button"
+          class="list-group-item list-group-item-action"
+          hx-get="{% url 'reservas:clienta_seleccionar' client.pk %}"
+          hx-target="#reservation-client-picker"
+          hx-swap="outerHTML"
+        >
+          {{ client }}
+          {% if client.identification_number %}
+            <span class="text-secondary"> · {{ client.identification_number }}</span>
+          {% endif %}
+          {% if client.phone %}
+            <span class="text-secondary"> · {{ client.phone }}</span>
+          {% endif %}
+        </button>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="text-secondary">No hay clientas que coincidan.</div>
+  {% endif %}
+{% endif %}

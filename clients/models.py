@@ -115,5 +115,7 @@ class Client(models.Model):
         super().save(*args, **kwargs)
 
     def has_service_history(self):
-        """Reservas asociadas. El módulo Reservation todavía no existe."""
-        return False
+        """True si la clienta tiene reservas. Esas reservas impiden eliminarla."""
+        if self.pk is None:
+            return False
+        return self.reservations.exists()

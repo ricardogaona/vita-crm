@@ -1,0 +1,96 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block title %}Reservas · Vita CRM{% endblock %}
+
+{% block page_actions %}
+  <a class="btn btn-primary" href="{% url 'reservas:nueva' %}">
+    <i class="ti ti-plus" aria-hidden="true"></i>
+    Nueva reserva
+  </a>
+{% endblock %}
+
+{% block dashboard_content %}
+  <div class="card">
+    <div class="card-header">
+      <form method="get" action="{% url 'reservas:lista' %}" role="search">
+        <div class="row g-2">
+          <div class="col-md">
+            <input
+              type="search"
+              name="q"
+              value="{{ query }}"
+              class="form-control"
+              placeholder="Nombre, apellido, teléfono o documento"
+              aria-label="Buscar por clienta"
+            >
+          </div>
+          <div class="col-md-3">
+            <input
+              type="date"
+              name="fecha"
+              value="{{ fecha }}"
+              class="form-control"
+              aria-label="Fecha programada"
+            >
+          </div>
+          <div class="col-md-3">
+            <select name="estado" class="form-select" aria-label="Estado">
+              <option value="" {% if not estado %}selected{% endif %}>Todos</option>
+              {% for value, label in status_choices %}
+                <option value="{{ value }}" {% if estado == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-auto">
+            <button class="btn btn-primary" type="submit">Buscar</button>
+          </div>
+        </div>
+      </form>
+    </div>
+    {% if page_obj.object_list %}
+      <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+          <thead>
+            <tr>
+              <th scope="col">Clienta</th>
+              <th scope="col">Fecha programada</th>
+              <th scope="col">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for reservation in page_obj %}
+              <tr>
+                <td>
+                  <a href="{% url 'reservas:detalle' reservation.pk %}">{{ reservation.client }}</a>
+                </td>
+                <td>{{ reservation.scheduled_at|date:"j/n/Y H:i" }}</td>
+                <td>
+                  {% if reservation.status == "attended" %}
+                    <span class="badge bg-success-lt">{{ reservation.get_status_display }}</span>
+                  {% elif reservation.status == "confirmed" %}
+                    <span class="badge bg-blue-lt">{{ reservation.get_status_display }}</span>
+                  {% elif reservation.status == "cancelled" or reservation.status == "no_show" %}
+                    <span class="badge bg-secondary-lt">{{ reservation.get_status_display }}</span>
+                  {% else %}
+                    <span class="badge bg-yellow-lt">{{ reservation.get_status_display }}</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="card-footer d-flex justify-content-center">
+        {% include "components/pagination.html" %}
+      </div>
+    {% else %}
+      <div class="card-body">
+        {% if query or fecha or estado %}
+          {% include "components/empty_state.html" with title="Sin resultados" message="No hay reservas que coincidan con la búsqueda." icon="ti-search" %}
+        {% else %}
+          {% include "components/empty_state.html" with title="Sin reservas" message="Todavía no hay reservas cargadas." icon="ti-calendar" %}
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

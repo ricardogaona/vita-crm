@@ -1,0 +1,116 @@
+{% extends "layouts/dashboard.html" %}
+
+{% block title %}{{ reservation }} · Vita CRM{% endblock %}
+
+{% block page_actions %}
+  <a class="btn btn-primary" href="{% url 'reservas:editar' reservation.pk %}">Editar</a>
+  {% if not reservation.has_performed_services %}
+    <form method="post" action="{% url 'reservas:eliminar' reservation.pk %}">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">Eliminar</button>
+    </form>
+  {% endif %}
+{% endblock %}
+
+{% block dashboard_content %}
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Ficha</h3>
+          <div class="card-actions">
+            {% if reservation.status == "attended" %}
+              <span class="badge bg-success-lt">{{ reservation.get_status_display }}</span>
+            {% elif reservation.status == "confirmed" %}
+              <span class="badge bg-blue-lt">{{ reservation.get_status_display }}</span>
+            {% elif reservation.status == "cancelled" or reservation.status == "no_show" %}
+              <span class="badge bg-secondary-lt">{{ reservation.get_status_display }}</span>
+            {% else %}
+              <span class="badge bg-yellow-lt">{{ reservation.get_status_display }}</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="datagrid">
+            <div class="datagrid-item">
+              <div class="datagrid-title">Clienta</div>
+              <div class="datagrid-content">
+                <a href="{% url 'clientes:detalle' reservation.client.pk %}">{{ reservation.client }}</a>
+              </div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Fecha programada</div>
+              <div class="datagrid-content">{{ reservation.scheduled_at|date:"j/n/Y H:i" }}</div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Estado</div>
+              <div class="datagrid-content">{{ reservation.get_status_display }}</div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Atendida el</div>
+              <div class="datagrid-content">
+                {% if reservation.attended_at %}
+                  {{ reservation.attended_at|date:"j/n/Y H:i" }}
+                {% else %}
+                  —
+                {% endif %}
+              </div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Observaciones</div>
+              <div class="datagrid-content">
+                {% if reservation.notes %}
+                  {{ reservation.notes|linebreaksbr }}
+                {% else %}
+                  —
+                {% endif %}
+              </div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Creada</div>
+              <div class="datagrid-content">{{ reservation.created_at|date:"j/n/Y H:i" }}</div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Actualizada</div>
+              <div class="datagrid-content">{{ reservation.updated_at|date:"j/n/Y H:i" }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mt-3">
+        <div class="card-header">
+          <h3 class="card-title">Servicios realizados</h3>
+        </div>
+        {% if performed_services is None %}
+          <div class="card-body">
+            <p class="text-secondary mb-0">
+              Los servicios realizados aparecerán cuando exista ese módulo.
+            </p>
+          </div>
+        {% elif performed_services %}
+          <div class="table-responsive">
+            <table class="table table-vcenter card-table">
+              <thead>
+                <tr>
+                  <th scope="col">Servicio</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for service in performed_services %}
+                  <tr>
+                    <td>{{ service }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="card-body">
+            {% include "components/empty_state.html" with title="Sin servicios" message="Esta reserva todavía no tiene servicios realizados." icon="ti-calendar" %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

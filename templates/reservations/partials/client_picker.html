@@ -1,0 +1,56 @@
+<div id="reservation-client-picker"{% if oob %} hx-swap-oob="outerHTML"{% endif %}>
+  <label class="form-label" for="id_client_search">
+    Clienta
+    <span class="text-danger" aria-hidden="true">*</span>
+    <span class="visually-hidden"> (obligatorio)</span>
+  </label>
+  <div class="row g-2 align-items-start">
+    <div class="col">
+      <input
+        type="search"
+        id="id_client_search"
+        name="q"
+        class="form-control"
+        placeholder="Nombre, apellido, teléfono o documento"
+        autocomplete="off"
+        aria-label="Buscar clienta"
+        hx-get="{% url 'reservas:clientas_buscar' %}"
+        hx-trigger="keyup changed delay:300ms, search"
+        hx-target="#client-search-results"
+        hx-on:keydown="if (event.key === 'Enter') event.preventDefault()"
+      >
+    </div>
+    <div class="col-auto">
+      <button
+        type="button"
+        class="btn"
+        hx-get="{% url 'reservas:clienta_nueva' %}"
+        hx-target="#new-client-modal-body"
+        hx-swap="innerHTML"
+        data-bs-toggle="modal"
+        data-bs-target="#new-client-modal"
+      >
+        + Nueva clienta
+      </button>
+    </div>
+  </div>
+  <div id="client-search-results" class="mt-2"></div>
+  {% if selected_client %}
+    <div class="form-hint mt-2" id="reservation-client-selected">
+      Seleccionada: {{ selected_client }}
+      {% if selected_client.phone %} · {{ selected_client.phone }}{% endif %}
+    </div>
+  {% else %}
+    <div class="form-hint mt-2" id="reservation-client-selected">Ninguna clienta seleccionada.</div>
+  {% endif %}
+  <input type="hidden" name="client" id="id_client" value="{% if selected_client %}{{ selected_client.pk }}{% elif client_value %}{{ client_value }}{% endif %}">
+  {% if form %}
+    {% if form.client.errors %}
+      <div class="invalid-feedback d-block" id="id_client-error">
+        {% for error in form.client.errors %}
+          <div>{{ error }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endif %}
+</div>

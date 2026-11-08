@@ -1,0 +1,24 @@
+{% if form.non_field_errors %}
+  <div class="alert alert-danger" role="alert">
+    {% for error in form.non_field_errors %}
+      <div>{{ error }}</div>
+    {% endfor %}
+  </div>
+{% endif %}
+<form
+  method="post"
+  action="{% url 'reservas:clienta_nueva' %}"
+  novalidate
+  hx-post="{% url 'reservas:clienta_nueva' %}"
+  hx-target="#new-client-modal-body"
+  hx-swap="innerHTML"
+>
+  {% csrf_token %}
+  {% for field in form %}
+    {% include "components/form_field.html" with field=field %}
+  {% endfor %}
+  <div class="d-flex gap-2">
+    <button type="submit" class="btn btn-primary">Guardar clienta</button>
+    <button type="button" class="btn" data-bs-dismiss="modal">Cancelar</button>
+  </div>
+</form>

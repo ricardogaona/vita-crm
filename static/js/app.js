@@ -50,4 +50,14 @@
     var detail = event.detail || {};
     initWidgets(detail.target || event.target);
   });
+
+  document.addEventListener("closeNewClientModal", function () {
+    var modalEl = document.getElementById("new-client-modal");
+    var api = bootstrapApi();
+    if (!modalEl || !api || !api.Modal) {
+      return;
+    }
+    var modal = api.Modal.getInstance(modalEl) || new api.Modal(modalEl);
+    modal.hide();
+  });
 })();

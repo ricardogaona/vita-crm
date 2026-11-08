@@ -275,7 +275,7 @@ class ClientViewTests(TestCase):
         self.assertContains(response, "Gomez, Ana")
         self.assertContains(response, "ana@example.com")
         self.assertContains(response, "Creada")
-        self.assertNotContains(response, "Reserva")
+        self.assertNotContains(response, "Fecha programada")
 
     def test_delete_removes_a_client_without_history(self):
         client = Client.objects.create(first_name="Ana", last_name="Gomez")
