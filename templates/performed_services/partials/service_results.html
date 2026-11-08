@@ -1,0 +1,19 @@
+{% if query %}
+  {% if services %}
+    <div class="list-group">
+      {% for service in services %}
+        <button
+          type="button"
+          class="list-group-item list-group-item-action"
+          hx-get="{% url 'atenciones:servicio_seleccionar' service.pk %}?prefix={{ prefix }}"
+          hx-target="#{{ prefix }}-service-picker"
+          hx-swap="outerHTML"
+        >
+          {{ service }}
+        </button>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="text-secondary">No hay servicios que coincidan.</div>
+  {% endif %}
+{% endif %}

@@ -1,9 +1,6 @@
-import json
-
 from django import forms
 from django.db.models import Q
 from django.forms.models import BaseInlineFormSet, inlineformset_factory
-from django.urls import reverse
 
 from clients.models import Client
 from professionals.models import Professional
@@ -157,8 +154,15 @@ class PerformedServiceItemForm(TablerModelForm):
         model = PerformedServiceItem
         fields = ("service", "unit_price_gs", "quantity")
         widgets = {
+            "service": forms.HiddenInput(),
             "unit_price_gs": forms.NumberInput(
-                attrs={"min": 0, "step": 1, "inputmode": "numeric", "data-unit-price": "true"}
+                attrs={
+                    "min": 0,
+                    "step": 1,
+                    "inputmode": "numeric",
+                    "readonly": True,
+                    "data-unit-price": "true",
+                }
             ),
             "quantity": forms.NumberInput(
                 attrs={"min": 1, "step": 1, "inputmode": "numeric", "data-quantity": "true"}
@@ -191,20 +195,16 @@ class PerformedServiceItemForm(TablerModelForm):
                 Q(is_active=True) | Q(pk=self.instance.service_id)
             )
         self.fields["service"].queryset = services
-        self.fields["service"].empty_label = "Elegí un servicio"
         self.fields["quantity"].initial = 1
         self.fields["unit_price_gs"].required = False
-        self.fields["service"].widget.attrs.update(
-            {
-                "hx-get": reverse("atenciones:precio_item"),
-                "hx-trigger": "change",
-                "hx-target": f"#{self.prefix}-price",
-                "hx-swap": "innerHTML",
-                "hx-include": "this",
-                "hx-vals": json.dumps({"prefix": self.prefix}),
-            }
-        )
+        self.selected_service = self._selected_service()
         self._errors = None
+
+    def _selected_service(self):
+        raw = self["service"].value()
+        if raw in (None, ""):
+            return None
+        return self.fields["service"].queryset.filter(pk=raw).first()
 
     def clean(self):
         cleaned = super().clean()

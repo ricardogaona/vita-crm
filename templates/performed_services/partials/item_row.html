@@ -9,14 +9,7 @@
     {% if form.DELETE %}
       <div class="visually-hidden">{{ form.DELETE }}</div>
     {% endif %}
-    {{ form.service }}
-    {% if form.service.errors %}
-      <div class="invalid-feedback d-block">
-        {% for error in form.service.errors %}
-          <div>{{ error }}</div>
-        {% endfor %}
-      </div>
-    {% endif %}
+    {% include "performed_services/partials/service_picker.html" %}
   </td>
   <td id="{{ form.prefix }}-price">
     {{ form.unit_price_gs }}

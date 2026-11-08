@@ -1,0 +1,51 @@
+<div id="{{ form.prefix }}-service-picker">
+  <div class="picker-field">
+    <div class="picker-control position-relative">
+      <input
+        type="text"
+        id="id_{{ form.prefix }}-service_search"
+        name="servicio_q"
+        class="form-control pe-5"
+        placeholder="Código o nombre"
+        autocomplete="off"
+        aria-label="Buscar servicio"
+        {% if form.selected_service %}readonly value="{{ form.selected_service }}"{% endif %}
+        hx-get="{% url 'atenciones:servicios_buscar' %}?prefix={{ form.prefix }}"
+        hx-trigger="keyup changed delay:300ms"
+        hx-target="#{{ form.prefix }}-service-results"
+        hx-on:keydown="if (event.key === 'Enter') event.preventDefault()"
+      >
+      <button
+        type="button"
+        class="picker-clear position-absolute top-50 end-0 translate-middle-y border-0 bg-transparent text-secondary lh-1 p-2"
+        data-picker-clear
+        data-picker-hidden="id_{{ form.prefix }}-service"
+        data-picker-search="id_{{ form.prefix }}-service_search"
+        data-picker-results="{{ form.prefix }}-service-results"
+        aria-label="Quitar servicio"
+        {% if not form.selected_service %}hidden{% endif %}
+      >
+        <i class="ti ti-x" aria-hidden="true"></i>
+      </button>
+    </div>
+    <div id="{{ form.prefix }}-service-results" class="picker-results"></div>
+  </div>
+  <input
+    type="hidden"
+    name="{{ form.prefix }}-service"
+    id="id_{{ form.prefix }}-service"
+    value="{% if form.selected_service %}{{ form.selected_service.pk }}{% elif form.service.value %}{{ form.service.value }}{% endif %}"
+  >
+  {% if form.service.errors %}
+    <div class="invalid-feedback d-block" id="id_{{ form.prefix }}-service-error">
+      {% for error in form.service.errors %}
+        <div>{{ error }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+{% if swap_price %}
+  <div id="{{ form.prefix }}-price" hx-swap-oob="innerHTML">
+    {{ form.unit_price_gs }}
+  </div>
+{% endif %}

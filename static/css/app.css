@@ -21,7 +21,21 @@
 /* The clear control sits inside the field. A flex item's default
    min-width would grow with the selected text and shift the row. */
 .picker-field {
+  position: relative;
   min-width: 0;
+}
+
+.picker-field:focus-within {
+  z-index: 3;
+}
+
+.picker-results {
+  position: absolute;
+  z-index: 5;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 0.25rem;
 }
 
 .picker-control {

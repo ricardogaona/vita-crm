@@ -323,6 +323,52 @@ def item_row(request):
     )
 
 
+def _service_prefix(raw):
+    prefix = raw or ""
+    if not PREFIX_RE.fullmatch(prefix):
+        return None
+    return prefix
+
+
+@vary_on_headers("HX-Request")
+@require_GET
+def service_search(request):
+    prefix = _service_prefix(request.GET.get("prefix"))
+    if prefix is None:
+        return HttpResponseBadRequest("Prefijo inválido.")
+    query = (request.GET.get("servicio_q") or "").strip()
+    services = Service.objects.none()
+    if query:
+        services = (
+            Service.objects.filter(is_active=True)
+            .filter(Q(code__icontains=query) | Q(name__icontains=query))
+            .order_by("code", "pk")[:SEARCH_LIMIT]
+        )
+    return render(
+        request,
+        "performed_services/partials/service_results.html",
+        {"services": services, "query": query, "prefix": prefix},
+    )
+
+
+@vary_on_headers("HX-Request")
+@require_GET
+def service_select(request, pk):
+    prefix = _service_prefix(request.GET.get("prefix"))
+    if prefix is None:
+        return HttpResponseBadRequest("Prefijo inválido.")
+    service = get_object_or_404(Service, pk=pk, is_active=True)
+    form = PerformedServiceItemForm(
+        prefix=prefix,
+        initial={"service": service.pk, "unit_price_gs": service.price_gs},
+    )
+    return render(
+        request,
+        "performed_services/partials/service_picker.html",
+        {"form": form, "swap_price": True},
+    )
+
+
 @vary_on_headers("HX-Request")
 @require_GET
 def item_price(request):

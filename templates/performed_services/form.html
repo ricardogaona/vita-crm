@@ -49,7 +49,7 @@
                 {% endfor %}
               </div>
             {% endif %}
-            <div class="table-responsive">
+            <div class="table-responsive overflow-visible">
               <table class="table table-vcenter">
                 <thead>
                   <tr>
@@ -180,6 +180,17 @@
       }
 
       form.addEventListener("click", function (event) {
+        var clearButton = event.target.closest("[data-picker-clear]");
+        if (clearButton && form.contains(clearButton)) {
+          var itemRow = clearButton.closest("[data-item-row]");
+          if (itemRow) {
+            var priceInput = itemRow.querySelector("[data-unit-price]");
+            if (priceInput) {
+              priceInput.value = "";
+            }
+            refreshTotals();
+          }
+        }
         var button = event.target.closest("[data-remove-item]");
         if (!button || !form.contains(button)) {
           return;

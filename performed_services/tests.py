@@ -302,6 +302,7 @@ class PerformedServiceFormTests(TestCase):
         choices = [choice[0] for choice in formset.forms[0].fields["service"].choices]
         self.assertIn(self.service.pk, choices)
         self.assertNotIn(self.inactive_service.pk, choices)
+        self.assertIsNone(formset.forms[0].selected_service)
 
         attention = PerformedService.objects.create(
             client=self.client_record,
@@ -320,6 +321,7 @@ class PerformedServiceFormTests(TestCase):
         row = bound.forms[0]
         choices = [choice[0] for choice in row.fields["service"].choices]
         self.assertIn(self.inactive_service.pk, choices)
+        self.assertEqual(row.selected_service, self.inactive_service)
         self.assertEqual(row["unit_price_gs"].value(), item.unit_price_gs)
 
     def test_empty_item_list_is_rejected(self):
@@ -636,3 +638,124 @@ class PerformedServiceViewTests(TestCase):
         self.assertNotContains(response, "1234567")
         self.assertNotContains(response, "15/3/2026")
         self.assertContains(response, f'value="{self.reservation.pk}"')
+
+    def test_create_form_searches_for_a_service(self):
+        response = self.client.get(reverse("atenciones:nueva"))
+
+        self.assertContains(response, 'id="id_items-0-service_search"')
+        self.assertContains(response, 'placeholder="Código o nombre"')
+        self.assertContains(response, "Buscar servicio")
+        self.assertContains(response, reverse("atenciones:servicios_buscar"))
+        self.assertNotContains(response, 'name="items-0-service" class="form-select"')
+
+    def test_new_item_row_includes_an_empty_service_picker(self):
+        response = self.client.get(reverse("atenciones:item_fila"), {"index": "1"})
+
+        self.assertContains(response, 'id="id_items-1-service_search"')
+        self.assertContains(response, 'name="items-1-service"')
+        self.assertContains(response, 'id="items-1-service-picker"')
+        self.assertNotContains(response, "<!DOCTYPE html>")
+
+    def test_service_search_matches_code_or_name_and_skips_inactive(self):
+        inactive = make_service(
+            code="OLD-001",
+            name="Antiguo",
+            price_gs=10000,
+            is_active=False,
+        )
+        by_name = self.client.get(
+            reverse("atenciones:servicios_buscar"),
+            {"prefix": "items-0", "servicio_q": "mani"},
+        )
+        self.assertContains(by_name, "GEL-001 — Manicura")
+        self.assertContains(
+            by_name,
+            reverse("atenciones:servicio_seleccionar", kwargs={"pk": self.manicure.pk}),
+        )
+        self.assertNotContains(by_name, "PED-001")
+        self.assertNotContains(by_name, "OLD-001")
+
+        by_code = self.client.get(
+            reverse("atenciones:servicios_buscar"),
+            {"prefix": "items-0", "servicio_q": "ped-001"},
+        )
+        self.assertContains(by_code, "PED-001 — Pedicura")
+        self.assertNotContains(by_code, "GEL-001")
+        self.assertNotContains(by_code, str(inactive))
+
+        empty = self.client.get(
+            reverse("atenciones:servicios_buscar"),
+            {"prefix": "items-0", "servicio_q": ""},
+        )
+        self.assertNotContains(empty, "GEL-001")
+        missing = self.client.get(
+            reverse("atenciones:servicios_buscar"),
+            {"prefix": "items-0", "servicio_q": "no-existe"},
+        )
+        self.assertContains(missing, "No hay servicios que coincidan.")
+        invalid = self.client.get(
+            reverse("atenciones:servicios_buscar"),
+            {"prefix": "servicio", "servicio_q": "mani"},
+        )
+        self.assertEqual(invalid.status_code, 400)
+
+    def test_service_select_locks_the_field_and_copies_the_price(self):
+        response = self.client.get(
+            reverse("atenciones:servicio_seleccionar", kwargs={"pk": self.manicure.pk}),
+            {"prefix": "items-0"},
+        )
+        label = "GEL-001 — Manicura"
+
+        self.assertContains(response, 'id="items-0-service-picker"')
+        self.assertContains(response, f'value="{label}"')
+        self.assertContains(response, "readonly")
+        self.assertContains(response, "Quitar servicio")
+        self.assertContains(response, f'value="{self.manicure.pk}"')
+        self.assertContains(response, 'name="items-0-service"')
+        self.assertContains(response, 'id="items-0-price"')
+        self.assertContains(response, 'hx-swap-oob="innerHTML"')
+        self.assertContains(response, 'name="items-0-unit_price_gs"')
+        self.assertContains(response, 'value="70000"')
+        self.assertNotContains(response, "<!DOCTYPE html>")
+
+        inactive = make_service(
+            code="OLD-001",
+            name="Antiguo",
+            price_gs=10000,
+            is_active=False,
+        )
+        rejected = self.client.get(
+            reverse("atenciones:servicio_seleccionar", kwargs={"pk": inactive.pk}),
+            {"prefix": "items-0"},
+        )
+        self.assertEqual(rejected.status_code, 404)
+        missing_prefix = self.client.get(
+            reverse("atenciones:servicio_seleccionar", kwargs={"pk": self.manicure.pk}),
+        )
+        self.assertEqual(missing_prefix.status_code, 400)
+
+    def test_edit_shows_the_saved_service_inside_the_field(self):
+        inactive = make_service(
+            code="OLD-001",
+            name="Antiguo",
+            price_gs=10000,
+            is_active=False,
+        )
+        attention = PerformedService.objects.create(
+            client=self.client_record,
+            professional=self.professional,
+            performed_at=aware(2026, 3, 20, 11, 0),
+        )
+        PerformedServiceItem.objects.create(
+            performed_service=attention,
+            service=inactive,
+            unit_price_gs=10000,
+            quantity=1,
+        )
+        response = self.client.get(
+            reverse("atenciones:editar", kwargs={"pk": attention.pk})
+        )
+
+        self.assertContains(response, 'value="OLD-001 — Antiguo"')
+        self.assertContains(response, "Quitar servicio")
+        self.assertContains(response, f'value="{inactive.pk}"')
