@@ -103,9 +103,9 @@ class ServiceModelTests(TestCase):
                 "Gel",
                 "Acrílico",
                 "Soft Gel",
-                "Remoción",
-                "Manicura y pedicura",
-                "Adicionales",
+                "Polygel",
+                "Pedicura",
+                "Servicios extras",
             },
         )
 
@@ -207,11 +207,14 @@ class ServiceAdminTests(TestCase):
             "Gel",
             "Acrílico",
             "Soft Gel",
-            "Remoción",
-            "Manicura y pedicura",
-            "Adicionales",
+            "Polygel",
+            "Pedicura",
+            "Servicios extras",
         ):
             self.assertContains(listed, label)
+        self.assertNotContains(listed, "Remoción")
+        self.assertNotContains(listed, "Manicura y pedicura")
+        self.assertNotContains(listed, "Adicionales")
 
         found = self.client.get(url, {"q": "acrílicas"})
         self.assertContains(found, acrylic.code)
@@ -231,7 +234,7 @@ class ServiceAdminTests(TestCase):
             {
                 "code": " rem-001 ",
                 "name": "  Remoción de gel ",
-                "category": CategoryChoices.REMOVAL,
+                "category": CategoryChoices.POLYGEL,
                 "price_gs": "80000",
                 "estimated_cost_gs": "",
                 "duration_minutes": "",
@@ -242,6 +245,7 @@ class ServiceAdminTests(TestCase):
         self.assertRedirects(response, reverse("admin:services_service_changelist"))
         self.assertEqual(service.code, "REM-001")
         self.assertEqual(service.name, "Remoción de gel")
+        self.assertEqual(service.category, CategoryChoices.POLYGEL)
         self.assertIsNone(service.estimated_cost_gs)
         self.assertIsNone(service.duration_minutes)
         self.assertTrue(service.is_active)
