@@ -19,9 +19,9 @@ class CategoryChoices(models.TextChoices):
     GEL = "gel", "Gel"
     ACRYLIC = "acrylic", "Acrílico"
     SOFT_GEL = "soft_gel", "Soft Gel"
-    REMOVAL = "removal", "Remoción"
-    MANICURE_PEDICURE = "manicure_pedicure", "Manicura y pedicura"
-    ADDITIONAL = "additional", "Adicionales"
+    POLYGEL = "polygel", "Polygel"
+    MANICURE_PEDICURE = "manicure_pedicure", "Pedicura"
+    ADDITIONAL = "additional", "Servicios extras"
 
 
 class ServiceQuerySet(models.QuerySet):
