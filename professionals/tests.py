@@ -1,4 +1,5 @@
 from datetime import date
+from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -280,6 +281,27 @@ class ProfessionalModelTests(TestCase):
         )
         self.assertEqual(Professional.objects.by_status("").count(), 2)
 
+    def test_commission_stays_empty_until_it_is_set(self):
+        professional = Professional.objects.create(
+            first_name="Ana",
+            last_name="Gomez",
+            identification_number="1234567",
+            phone="+595981",
+            email="ana@example.com",
+        )
+        professional.refresh_from_db()
+        self.assertIsNone(professional.commission)
+
+        professional.commission = Decimal("37.50")
+        professional.save()
+        professional.refresh_from_db()
+        self.assertEqual(professional.commission, Decimal("37.50"))
+
+        professional.commission = Decimal("25")
+        professional.save()
+        professional.refresh_from_db()
+        self.assertEqual(professional.commission, Decimal("25.00"))
+
 
 class ProfessionalFormTests(TestCase):
     def test_save_normalizes_text_and_starts_active(self):
@@ -398,6 +420,54 @@ class ProfessionalFormTests(TestCase):
         self.assertIsNone(professional.end_date)
 
 
+class ProfessionalAdminTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_superuser("admin", "admin@example.com", "password")
+        self.client.force_login(self.user)
+
+    def test_admin_creates_and_edits_commission(self):
+        response = self.client.post(
+            reverse("admin:professionals_professional_add"),
+            {
+                "first_name": "Ana",
+                "last_name": "Gomez",
+                "identification_number": "1234567",
+                "phone": "+595981",
+                "email": "ana@example.com",
+                "is_active": "on",
+                "commission": "37.50",
+                "start_date": "",
+                "end_date": "",
+                "notes": "",
+            },
+        )
+        professional = Professional.objects.get()
+        self.assertRedirects(response, reverse("admin:professionals_professional_changelist"))
+        self.assertEqual(professional.commission, Decimal("37.50"))
+
+        change_url = reverse("admin:professionals_professional_change", args=[professional.pk])
+        edited = self.client.post(
+            change_url,
+            {
+                "first_name": professional.first_name,
+                "last_name": professional.last_name,
+                "identification_number": professional.identification_number,
+                "phone": professional.phone,
+                "email": professional.email,
+                "is_active": "on",
+                "commission": "25.00",
+                "start_date": "",
+                "end_date": "",
+                "notes": "",
+            },
+        )
+        self.assertRedirects(edited, reverse("admin:professionals_professional_changelist"))
+        professional.refresh_from_db()
+        self.assertEqual(professional.commission, Decimal("25.00"))
+        self.assertEqual(professional.first_name, "Ana")
+        self.assertEqual(professional.email, "ana@example.com")
+
+
 class ProfessionalViewTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user("visitante", password="clave-segura")
@@ -501,7 +571,20 @@ class ProfessionalViewTests(TestCase):
 
         self.assertContains(response, "Gomez, Ana")
         self.assertContains(response, "ana@example.com")
+        self.assertContains(response, "Comisión")
+        self.assertContains(
+            response,
+            '<div class="datagrid-title">Comisión</div><div class="datagrid-content">—</div>',
+            html=True,
+        )
         self.assertContains(response, "Creada")
+
+        professional.commission = Decimal("37.50")
+        professional.save()
+        with_commission = self.client.get(
+            reverse("profesionales:detalle", kwargs={"pk": professional.pk})
+        )
+        self.assertContains(with_commission, "37,50%")
         self.assertContains(response, "Esta profesional todavía no tiene servicios realizados.")
         self.assertContains(response, reverse("profesionales:lista"))
         self.assertNotContains(response, "Editar")

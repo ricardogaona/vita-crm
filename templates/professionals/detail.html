@@ -39,6 +39,16 @@
               <div class="datagrid-content">{{ professional.email }}</div>
             </div>
             <div class="datagrid-item">
+              <div class="datagrid-title">Comisión</div>
+              <div class="datagrid-content">
+                {% if professional.commission is not None %}
+                  {{ professional.commission|floatformat:"-2" }}%
+                {% else %}
+                  —
+                {% endif %}
+              </div>
+            </div>
+            <div class="datagrid-item">
               <div class="datagrid-title">Incorporación</div>
               <div class="datagrid-content">
                 {% if professional.start_date %}
