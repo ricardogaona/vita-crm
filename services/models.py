@@ -24,6 +24,29 @@ class CategoryChoices(models.TextChoices):
     ADDITIONAL = "additional", "Adicionales"
 
 
+class ServiceQuerySet(models.QuerySet):
+    def search(self, query):
+        text = (query or "").strip()
+        if not text:
+            return self
+        results = self
+        for term in text.split():
+            results = results.filter(Q(code__icontains=term) | Q(name__icontains=term))
+        return results
+
+    def by_category(self, category):
+        if category in CategoryChoices.values:
+            return self.filter(category=category)
+        return self
+
+    def by_status(self, status):
+        if status == "activos":
+            return self.filter(is_active=True)
+        if status == "inactivos":
+            return self.filter(is_active=False)
+        return self
+
+
 class Service(models.Model):
     code = models.CharField("código", max_length=30, unique=True)
     name = models.CharField("nombre", max_length=150)
@@ -51,11 +74,16 @@ class Service(models.Model):
     )
     duration_minutes = models.PositiveIntegerField(
         "duración",
+        null=True,
+        blank=True,
         validators=[MinValueValidator(1, DURATION_MESSAGE)],
+        help_text="Vacío si todavía no se conoce. Si se indica, al menos un minuto.",
     )
     is_active = models.BooleanField("activo", default=True)
     created_at = models.DateTimeField("creado", auto_now_add=True)
     updated_at = models.DateTimeField("actualizado", auto_now=True)
+
+    objects = ServiceQuerySet.as_manager()
 
     class Meta:
         verbose_name = "servicio"
@@ -68,7 +96,7 @@ class Service(models.Model):
                 violation_error_message=DUPLICATE_CODE,
             ),
             models.CheckConstraint(
-                condition=Q(duration_minutes__gte=1),
+                condition=Q(duration_minutes__isnull=True) | Q(duration_minutes__gte=1),
                 name="service_duration_at_least_one",
                 violation_error_message=DURATION_MESSAGE,
             ),
@@ -95,9 +123,6 @@ class Service(models.Model):
             if field not in excluded and not getattr(self, field):
                 errors[field] = [message]
                 excluded.add(field)
-        if "duration_minutes" not in excluded and not self.duration_minutes:
-            errors["duration_minutes"] = [DURATION_MESSAGE]
-            excluded.add("duration_minutes")
         try:
             super().clean_fields(exclude=excluded)
         except ValidationError as exc:

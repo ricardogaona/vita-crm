@@ -1,0 +1,65 @@
+{% extends "layouts/dashboard.html" %}
+{% load money %}
+
+{% block title %}{{ service }} · Vita CRM{% endblock %}
+
+{% block dashboard_content %}
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Ficha</h3>
+          <div class="card-actions">
+            {% if service.is_active %}
+              <span class="badge bg-success-lt">Activo</span>
+            {% else %}
+              <span class="badge bg-secondary-lt">Inactivo</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="datagrid">
+            <div class="datagrid-item">
+              <div class="datagrid-title">Código</div>
+              <div class="datagrid-content">{{ service.code }}</div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Nombre</div>
+              <div class="datagrid-content">{{ service.name }}</div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Categoría</div>
+              <div class="datagrid-content">{{ service.get_category_display|default:"—" }}</div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Precio de lista</div>
+              <div class="datagrid-content">{{ service.price_gs|guaranies }}</div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Costo estimado</div>
+              <div class="datagrid-content">{{ service.estimated_cost_gs|guaranies }}</div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Duración</div>
+              <div class="datagrid-content">
+                {% if service.duration_minutes %}
+                  {{ service.duration_minutes }} min
+                {% else %}
+                  —
+                {% endif %}
+              </div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Creado</div>
+              <div class="datagrid-content">{{ service.created_at|date:"j/n/Y H:i" }}</div>
+            </div>
+            <div class="datagrid-item">
+              <div class="datagrid-title">Actualizado</div>
+              <div class="datagrid-content">{{ service.updated_at|date:"j/n/Y H:i" }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

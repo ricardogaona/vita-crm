@@ -15,11 +15,6 @@
             <span class="ms-2">{{ user.get_username }}</span>
           </span>
         </div>
-        {% if user.is_staff %}
-          <div class="nav-item">
-            <a class="nav-link" href="{% url 'admin:index' %}">Administración</a>
-          </div>
-        {% endif %}
       {% endif %}
     </div>
   </div>
