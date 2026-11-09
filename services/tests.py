@@ -148,7 +148,13 @@ class ServiceModelTests(TestCase):
                 Service.objects.filter(pk=zero.pk).update(estimated_cost_gs=-1)
 
     def test_duration_must_be_at_least_one_minute(self):
-        service = Service(code="gel-003", name="Corto", price_gs=10, duration_minutes=1)
+        unknown = Service(code="gel-003", name="Corto", price_gs=10)
+        unknown.full_clean()
+        unknown.save()
+        unknown.refresh_from_db()
+        self.assertIsNone(unknown.duration_minutes)
+
+        service = Service(code="gel-003b", name="Un minuto", price_gs=10, duration_minutes=1)
         service.full_clean()
 
         service.duration_minutes = 0
@@ -228,7 +234,7 @@ class ServiceAdminTests(TestCase):
                 "category": CategoryChoices.REMOVAL,
                 "price_gs": "80000",
                 "estimated_cost_gs": "",
-                "duration_minutes": "30",
+                "duration_minutes": "",
                 "is_active": "on",
             },
         )
@@ -237,6 +243,7 @@ class ServiceAdminTests(TestCase):
         self.assertEqual(service.code, "REM-001")
         self.assertEqual(service.name, "Remoción de gel")
         self.assertIsNone(service.estimated_cost_gs)
+        self.assertIsNone(service.duration_minutes)
         self.assertTrue(service.is_active)
 
         change_url = reverse("admin:services_service_change", args=[service.pk])
@@ -254,7 +261,7 @@ class ServiceAdminTests(TestCase):
                 "category": service.category,
                 "price_gs": "90000",
                 "estimated_cost_gs": "0",
-                "duration_minutes": service.duration_minutes,
+                "duration_minutes": "30",
                 "is_active": "on",
             },
         )
@@ -297,8 +304,113 @@ class ServiceAdminTests(TestCase):
                 self.client.post(delete_url, {"post": "yes"})
         self.assertEqual(caught.exception.args[0], DEACTIVATE_INSTEAD)
 
-    def test_no_custom_frontend_routes(self):
-        for path in ("/servicios/", "/services/"):
-            with self.assertRaises(Resolver404):
-                resolve(path)
+    def test_english_path_is_not_published(self):
+        with self.assertRaises(Resolver404):
+            resolve("/services/")
         self.assertIn(Service, admin.site._registry)
+
+
+class ServiceViewTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user("visitante", password="clave-segura")
+        self.client.force_login(self.user)
+
+    def test_anonymous_user_goes_to_login(self):
+        self.client.logout()
+        response = self.client.get(reverse("servicios:lista"))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/admin/login/", response.url)
+        self.assertIn("next=/servicios/", response.url)
+
+    def test_list_has_no_create_action(self):
+        response = self.client.get(reverse("servicios:lista"))
+
+        self.assertNotContains(response, "Nuevo servicio")
+        self.assertNotContains(response, "Editar")
+        self.assertNotContains(response, "Eliminar")
+
+    def test_write_routes_are_not_published(self):
+        service = make_service()
+        paths = [
+            "/servicios/nuevo/",
+            f"/servicios/{service.pk}/editar/",
+            f"/servicios/{service.pk}/eliminar/",
+        ]
+
+        for path in paths:
+            self.assertEqual(self.client.get(path).status_code, 404)
+            self.assertEqual(self.client.post(path).status_code, 404)
+
+        self.assertEqual(self.client.post(reverse("servicios:lista")).status_code, 405)
+        self.assertEqual(
+            self.client.post(reverse("servicios:detalle", kwargs={"pk": service.pk})).status_code,
+            405,
+        )
+        service.refresh_from_db()
+        self.assertEqual(service.price_gs, 150000)
+        self.assertEqual(Service.objects.count(), 1)
+
+    def test_inactive_service_stays_in_the_filtered_list(self):
+        make_service(code="gel-001", name="Esmaltado", is_active=True)
+        make_service(
+            code="acr-001",
+            name="Uñas acrílicas",
+            category=CategoryChoices.ACRYLIC,
+            is_active=False,
+        )
+
+        found = self.client.get(reverse("servicios:lista"), {"q": "Esmaltado"})
+        self.assertContains(found, "GEL-001")
+        self.assertContains(found, "Activo")
+        self.assertContains(found, "Gel")
+        self.assertContains(found, "Gs. 150.000")
+        self.assertNotContains(found, "ACR-001")
+
+        inactive = self.client.get(reverse("servicios:lista"), {"estado": "inactivos"})
+        self.assertContains(inactive, "Inactivo")
+        self.assertContains(inactive, "ACR-001")
+        self.assertNotContains(inactive, "GEL-001")
+
+        by_category = self.client.get(
+            reverse("servicios:lista"),
+            {"categoria": CategoryChoices.ACRYLIC},
+        )
+        self.assertContains(by_category, "ACR-001")
+        self.assertNotContains(by_category, "GEL-001")
+
+    def test_search_list_and_pagination_keep_the_query(self):
+        for index in range(26):
+            make_service(
+                code=f"gel-{index:03d}",
+                name=f"Lista {index:02d}",
+                category=CategoryChoices.GEL,
+            )
+
+        page = self.client.get(
+            reverse("servicios:lista"),
+            {"q": "Lista", "categoria": CategoryChoices.GEL, "estado": "activos", "page": 2},
+        )
+        self.assertEqual(page.context["page_obj"].number, 2)
+        self.assertContains(page, "q=Lista")
+        self.assertContains(page, "categoria=gel")
+        self.assertContains(page, "estado=activos")
+        self.assertContains(page, "page=1")
+
+    def test_detail_shows_catalog_without_edit_actions(self):
+        service = make_service(estimated_cost_gs=None, duration_minutes=None)
+        response = self.client.get(reverse("servicios:detalle", kwargs={"pk": service.pk}))
+
+        self.assertContains(response, "GEL-001 — Esmaltado semipermanente")
+        self.assertContains(response, "Precio de lista")
+        self.assertContains(response, "Gs. 150.000")
+        self.assertContains(response, "Costo estimado")
+        self.assertContains(response, "Duración")
+        self.assertContains(response, "—")
+        self.assertContains(response, "Creado")
+        self.assertContains(response, "Actualizado")
+        self.assertContains(response, reverse("servicios:lista"))
+        self.assertNotContains(response, " min")
+        self.assertNotContains(response, "Editar")
+        self.assertNotContains(response, "Eliminar")
+        self.assertNotContains(response, "Nuevo")

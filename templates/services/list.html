@@ -1,0 +1,88 @@
+{% extends "layouts/dashboard.html" %}
+{% load money %}
+
+{% block title %}Servicios · Vita CRM{% endblock %}
+
+{% block dashboard_content %}
+  <div class="card">
+    <div class="card-header">
+      <form method="get" action="{% url 'servicios:lista' %}" role="search">
+        <div class="row g-2">
+          <div class="col-md">
+            <input
+              type="search"
+              name="q"
+              value="{{ query }}"
+              class="form-control"
+              placeholder="Código o nombre"
+              aria-label="Buscar servicios"
+            >
+          </div>
+          <div class="col-md-3">
+            <select name="categoria" class="form-select" aria-label="Categoría">
+              <option value="" {% if not categoria %}selected{% endif %}>Todas las categorías</option>
+              {% for value, label in categories %}
+                <option value="{{ value }}" {% if categoria == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-3">
+            <select name="estado" class="form-select" aria-label="Estado">
+              <option value="" {% if not estado %}selected{% endif %}>Todos</option>
+              <option value="activos" {% if estado == "activos" %}selected{% endif %}>Activos</option>
+              <option value="inactivos" {% if estado == "inactivos" %}selected{% endif %}>Inactivos</option>
+            </select>
+          </div>
+          <div class="col-md-auto">
+            <button class="btn btn-primary" type="submit">Buscar</button>
+          </div>
+        </div>
+      </form>
+    </div>
+    {% if page_obj.object_list %}
+      <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+          <thead>
+            <tr>
+              <th scope="col">Código</th>
+              <th scope="col">Nombre</th>
+              <th scope="col">Categoría</th>
+              <th scope="col">Precio</th>
+              <th scope="col">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for service in page_obj %}
+              <tr>
+                <td>
+                  <a href="{% url 'servicios:detalle' service.pk %}">{{ service.code }}</a>
+                </td>
+                <td>{{ service.name }}</td>
+                <td>{{ service.get_category_display|default:"—" }}</td>
+                <td>{{ service.price_gs|guaranies }}</td>
+                <td>
+                  {% if service.is_active %}
+                    <span class="badge bg-success-lt">Activo</span>
+                  {% else %}
+                    <span class="badge bg-secondary-lt">Inactivo</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="card-footer d-flex justify-content-center">
+        {% include "components/pagination.html" %}
+      </div>
+    {% else %}
+      <div class="card-body">
+        {% if query or categoria or estado %}
+          {% include "components/empty_state.html" with title="Sin resultados" message="No hay servicios que coincidan con la búsqueda." icon="ti-search" %}
+        {% else %}
+          {% include "components/empty_state.html" with title="Sin servicios" message="Todavía no hay servicios cargados." icon="ti-scissors" %}
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

@@ -12,6 +12,7 @@ class ProfessionalAdmin(admin.ModelAdmin):
         "phone",
         "email",
         "is_active",
+        "commission",
         "start_date",
     )
     search_fields = (

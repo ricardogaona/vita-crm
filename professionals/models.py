@@ -63,6 +63,14 @@ class Professional(models.Model):
     phone = models.CharField("teléfono", max_length=30)
     email = models.EmailField("correo electrónico", max_length=254)
     is_active = models.BooleanField("activa", default=True)
+    commission = models.DecimalField(
+        "comisión",
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Porcentaje sobre cada atención.",
+    )
     start_date = models.DateField("incorporación", null=True, blank=True)
     end_date = models.DateField("finalización", null=True, blank=True)
     notes = models.TextField("notas", blank=True, default="")
