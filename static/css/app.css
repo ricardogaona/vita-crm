@@ -36,6 +36,14 @@
   left: 0;
   right: 0;
   margin-top: 0.25rem;
+  /* Tabler sets --tblr-list-group-bg to inherit. Nothing above this
+     overlay defines it, so the options paint transparent and the form
+     underneath shows through. */
+  background-color: var(--tblr-white);
+}
+
+.picker-results .list-group {
+  --tblr-list-group-bg: var(--tblr-white);
 }
 
 .picker-control {
